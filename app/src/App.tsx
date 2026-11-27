@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { InspectorPanel } from './components/InspectorPanel';
 import { GlossaryDialog } from './components/GlossaryDialog';
+import { StoryBrief } from './components/StoryBrief';
 import { Week0OverviewViz } from './visualizers/Week0OverviewViz';
 import { Part1CloudRunViz } from './visualizers/Part1CloudRunViz';
 import { Part2KeylessAuthViz } from './visualizers/Part2KeylessAuthViz';
@@ -80,6 +81,9 @@ export function App() {
     } else {
       setInspectorTab(saved.solved[id] ? 'step' : 'quiz');
     }
+    const stage = document.getElementById('main-stage');
+    stage?.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectQuizChoice = (choiceId: string, isCorrect: boolean) => {
@@ -186,6 +190,8 @@ export function App() {
             </div>
           </div>
 
+          <StoryBrief story={activeLesson.story} lessonKey={activeLesson.id} />
+
           {activeLessonId === 'w00-overview' && (
             <Week0OverviewViz
               onStepInsightChange={handleStepInsightChange}
@@ -216,6 +222,7 @@ export function App() {
           predictionText={saved.predictions[activeLesson.id] ?? ''}
           onChangePrediction={handleChangePrediction}
           onOpenGlossary={handleOpenGlossary}
+          onSelectLesson={handleSelectLesson}
         />
       </div>
 

@@ -1,8 +1,16 @@
-# 第1週　IAMとCloud Run
+# 第1週　IAMとCloud Run（ストーリー：社内マニュアル回答アプリ立ち上げ）
 
+> **今週の全体ストーリー**
+> サポート部門から「社内向け『製品マニュアル回答アプリ』を Google Cloud 上で立ち上げたい（将来は AI 連携や本番運用まで広げたい）」と依頼を受けました。第1週では、最初の最小構成を **安全に動かし始めるまでに必ずぶつかる 4 つの壁**（① 権限境界 → ② 鍵なし認証 → ③ 秘密情報の最小スコープ → ④ 課金暴走防止）を順番に突破していきます。
+>
 > 用語がわからないときは [学習 用語集（Week 0〜1）](glossary.md) を参照してください（[共通基礎](glossary.md#共通基本用語web--クラウド基礎) / [Part 1](glossary.md#part-1cloud-run-と-3-つの権限境界) / [Part 2](glossary.md#part-2鍵を使わない認証adc--wif--トークン) / [Part 3](glossary.md#part-3リソース階層と-secret-manager) / [Part 4](glossary.md#part-4予算通知とクォータfinops)）。
 
-## Part 1
+## Part 1｜第1話：動かしたいのに誰に何の権限を渡す？
+
+> **ストーリー**
+> - **依頼・状況**：サポート部門から「社内ポータルから呼べる『製品マニュアル読み取り API』を作ってほしい。社外には非公開、マニュアルの誤改ざん防止のため書き込みは禁止」と依頼を受けた。
+> - **作りたいもの**：Cloud Run にマニュアル API をデプロイし、Cloud Storage（`manual-docs` バケット）にある製品マニュアルだけを安全に読み取れるようにする。
+> - **直面した課題**：いざ設定すると「デプロイが 403 で失敗」「ポータルにバケット権限を付けても動かない」と混乱。かといって全員に `Editor` を付けると書き込み禁止の要件を破ってしまう。
 
 **例題｜マニュアルを読めるのは誰？**
 
@@ -55,7 +63,12 @@
 
 [呼び出し認証](https://docs.cloud.google.com/run/docs/authenticating/overview) ・ [サービスIDの設定](https://docs.cloud.google.com/run/docs/configuring/services/service-identity) ・ [StorageのIAMロール](https://docs.cloud.google.com/storage/docs/access-control/iam-roles)
 
-## Part 2
+## Part 2｜第2話：自動化したいが JSON 鍵は絶対 NG
+
+> **ストーリー**
+> - **依頼・状況**：第1話で権限境界を設計できたマニュアル API を、チーム開発向けに GitHub Actions（外部 CI）から自動テスト・自動デプロイできるようにしてほしいと依頼された。
+> - **作りたいもの**：Cloud Run 上のアプリと外部 CI の両方から、安全に Google Cloud API を呼び出せる認証方式を整える。
+> - **直面した課題**：「JSON キーを配れば簡単」と案が出たが、セキュリティ担当から「無期限の鍵ファイルは漏えい事故のもと。1 つも作るな」と却下。さらに「Mac では動くのに Cloud Run では 403」という現象も起きた。
 
 **例題｜同じアプリをCloud Runと外部CIで認証する**
 
@@ -109,7 +122,12 @@ Cloud Runの入口に送る**IDトークン**は、相手のサービスが「�
 
 [Cloud RunのサービスID](https://docs.cloud.google.com/run/docs/securing/service-identity) ・ [外部CIのWorkload Identity Federation](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines) ・ [ローカルADC](https://docs.cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
 
-## Part 3
+## Part 3｜第3話：API キーを足したら別の秘密まで見える
+
+> **ストーリー**
+> - **依頼・状況**：マニュアル回答の精度を上げるため、「外部の検索・AI API と連携させたい。API キーはコードに直書きせず Secret Manager で管理して」と追加依頼が来た。
+> - **作りたいもの**：Cloud Run の実行時 ID に、同じプロジェクト内の複数シークレットのうち「対象 API キー 1 件だけ」を読み取れる権限を与える。
+> - **直面した課題**：プロジェクト全体に閲覧ロールを付けたら、他チームが置いた DB パスワード等のシークレットまで読めてしまうことが発覚。子リソース側の設定を空にしても読めてしまう「継承の罠」に直面した。
 
 **例題｜アプリに一つのシークレットだけ読ませる**
 
@@ -161,7 +179,12 @@ IAMの**有効なAllowポリシー**は、対象リソースの許可と上位�
 
 [リソース階層とアクセス制御](https://docs.cloud.google.com/iam/docs/resource-hierarchy-access-control) ・ [IAM Deny](https://docs.cloud.google.com/iam/docs/deny-overview) ・ [Secret Managerのアクセス制御](https://docs.cloud.google.com/secret-manager/docs/access-control)
 
-## Part 4
+## Part 4｜第4話：公開直前「予算で課金は止まるよね？」
+
+> **ストーリー**
+> - **依頼・状況**：ついにマニュアル回答アプリの社内テスト公開が目前。マネージャーから「検証中にバグやアクセス集中で請求が跳ね上がったら困る。月額予算を設定して上限で止まるようにして」と依頼された。
+> - **作りたいもの**：想定外のアクセスやバグが起きても、費用異常に早く気づき、かつ利用量そのものが暴走しない安全な運用ガードレールを整える。
+> - **直面した課題**：調べると「Cloud Billing の予算は通知が出るだけで、100% に達しても利用は止まらない」と判明。しかも課金集計には時間差（ラグ）があり、このままでは週末の暴走を防げない。
 
 **例題｜学習用プロジェクトの費用が心配**
 

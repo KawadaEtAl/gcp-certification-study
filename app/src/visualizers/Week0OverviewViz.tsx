@@ -602,10 +602,10 @@ export function Week0OverviewViz({ onStepInsightChange, onJumpToLesson }: Week0P
             <div className="index-launch-bar">
               <div>
                 <strong style={{ display: 'block', fontSize: '0.9rem' }}>
-                  まずは第1週（IAM と Cloud Run）から始める
+                  第1週ストーリー：社内マニュアル回答アプリを安全に動かす
                 </strong>
                 <span style={{ fontSize: '0.8rem', color: 'var(--ink-secondary)' }}>
-                  公開済み 4 単元：Cloud Run 3主体IAM / 短命認証 / 権限継承 / 予算通知とクォータ
+                  第1話 権限境界 → 第2話 鍵なし認証 → 第3話 秘密情報の最小スコープ → 第4話 課金暴走防止
                 </span>
               </div>
               <button
@@ -613,7 +613,7 @@ export function Week0OverviewViz({ onStepInsightChange, onJumpToLesson }: Week0P
                 className="btn-play"
                 onClick={() => onJumpToLesson(activeLayer.jumpLessonId ?? 'w01-p1')}
               >
-                第1週を開く
+                第1話から始める
                 <ArrowRight size={15} aria-hidden="true" />
               </button>
             </div>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  ArrowRight,
   BookMarked,
   BookOpen,
   Check,
@@ -12,7 +13,7 @@ import {
   Microscope,
   Sparkles,
 } from 'lucide-react';
-import type { InspectorTabId, LessonData, StepInsight } from '../types';
+import type { InspectorTabId, LessonData, LessonId, StepInsight } from '../types';
 import { getGlossaryTermsForLesson } from '../data/glossary';
 import { QuizCard } from './QuizCard';
 import { ConsoleScreenGallery } from './ConsoleScreenGallery';
@@ -28,6 +29,7 @@ interface InspectorPanelProps {
   predictionText: string;
   onChangePrediction: (value: string) => void;
   onOpenGlossary: (termId?: string) => void;
+  onSelectLesson: (id: LessonId) => void;
 }
 
 const TABS: { id: InspectorTabId; label: string; icon: typeof HelpCircle }[] = [
@@ -47,6 +49,7 @@ export function InspectorPanel({
   predictionText,
   onChangePrediction,
   onOpenGlossary,
+  onSelectLesson,
 }: InspectorPanelProps) {
   const [miniOpen, setMiniOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -293,6 +296,27 @@ export function InspectorPanel({
                 <RichText text={lesson.flipCondition} />
               </div>
             </div>
+
+            {lesson.story.nextBridge && (
+              <section className="next-story-card" aria-label="次のストーリー">
+                <p className="panel-kicker">ストーリーの続き</p>
+                <p className="next-story-teaser">
+                  <RichText text={lesson.story.nextBridge.teaser} />
+                </p>
+                {lesson.story.nextBridge.nextLessonId ? (
+                  <button
+                    type="button"
+                    className="btn-play"
+                    onClick={() => onSelectLesson(lesson.story.nextBridge!.nextLessonId!)}
+                  >
+                    {lesson.story.nextBridge.nextLabel}
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <p className="next-story-finale">{lesson.story.nextBridge.nextLabel}</p>
+                )}
+              </section>
+            )}
 
             <p className="panel-kicker" style={{ marginTop: '1.1rem' }}>
               公式ドキュメント・Anki

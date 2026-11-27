@@ -80,6 +80,21 @@ export interface StepInsight {
   payloadJson?: string;
 }
 
+export interface LessonStoryBridge {
+  nextLessonId?: LessonId;
+  nextLabel: string;
+  teaser: string;
+}
+
+export interface LessonStory {
+  episodeLabel: string;
+  hookTitle: string;
+  request: string;
+  goal: string;
+  challenge: string;
+  nextBridge?: LessonStoryBridge;
+}
+
 export interface LessonData {
   id: LessonId;
   week: number;
@@ -88,6 +103,7 @@ export interface LessonData {
   shortTitle: string;
   title: string;
   tagline: string;
+  story: LessonStory;
   visualTypeLabel: string;
   estimatedMinutes: number;
   examQuiz: QuizQuestion;

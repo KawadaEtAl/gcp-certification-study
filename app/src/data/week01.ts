@@ -8,6 +8,22 @@ export const WEEK00_LESSON: LessonData = {
   shortTitle: 'GCP 全体像・学習インデックス',
   title: 'Google Cloud 全体像と 24 週計画',
   tagline: 'PCA → PAA で学ぶ 6 領域のつながりと、週次カリキュラムの現在地を一枚で俯瞰する',
+  story: {
+    episodeLabel: 'プロローグ',
+    hookTitle: '社内マニュアル回答アプリを立ち上げよ',
+    request:
+      'サポート部門から「社内向け『製品マニュアル回答アプリ』を Google Cloud 上で立ち上げたい。将来は AI 連携や本番運用まで広げたい」と依頼を受けた。',
+    goal:
+      'まずは最小構成（Web API＋文書保管＋認証・課金ガード）から安全に動かし、24 週間かけて本番レベルのアーキテクチャへ育てていく。',
+    challenge:
+      'Google Cloud には多数のサービスがある。全体地図を持たずに作り始めると、権限の付けすぎ・鍵ファイル漏えい・想定外課金などの事故を招きやすい。',
+    nextBridge: {
+      nextLessonId: 'w01-p1',
+      nextLabel: '第1話：Cloud Run の 3 つの権限境界へ',
+      teaser:
+        '全体像を掴んだらいよいよ構築スタート。最初の壁は「誰に何の権限を付ければよいか？」です。',
+    },
+  },
   visualTypeLabel: '6領域アーキテクチャマップ・全体目次',
   estimatedMinutes: 4,
   examQuiz: {
@@ -96,6 +112,22 @@ export const WEEK01_LESSONS: LessonData[] = [
     shortTitle: 'Cloud Run の 3 つの権限境界',
     title: 'Cloud Run の 3 つの権限チェック',
     tagline: '「デプロイ」「入口の呼び出し」「実行時のデータ操作」はすべて別の主体と判定地点で評価される',
+    story: {
+      episodeLabel: '第1話',
+      hookTitle: '動かしたいのに誰に何の権限を渡す？',
+      request:
+        'プロジェクト始動。サポート部門から「社内ポータルから呼べる『製品マニュアル読み取り API』を作ってほしい。社外には非公開、マニュアル誤改ざん防止のため書き込み禁止」と依頼を受けた。',
+      goal:
+        'Cloud Run にマニュアル API をデプロイし、Cloud Storage（`manual-docs` バケット）にある製品マニュアルだけを安全に読み取れるようにする。',
+      challenge:
+        'いざ進めると「デプロイが 403 で失敗」「ポータルにバケット権限を付けても動かない」と混乱。かといって全員に `Editor` を付けると書き込み禁止の要件を破ってしまう。',
+      nextBridge: {
+        nextLessonId: 'w01-p2',
+        nextLabel: '第2話：鍵を使わない認証（ADC / WIF）へ',
+        teaser:
+          '3 つの権限境界が整理できた。次は GitHub Actions から自動デプロイしたいが、「JSON キーファイルは作るな」というセキュリティの壁にぶつかる。',
+      },
+    },
     visualTypeLabel: '2プレーン空間図・シーケンス切替',
     estimatedMinutes: 5,
     examQuiz: {
@@ -233,6 +265,22 @@ export const WEEK01_LESSONS: LessonData[] = [
     shortTitle: '鍵を使わない認証（ADC / WIF）',
     title: '鍵を使わない認証とトークン寿命',
     tagline: '実行環境ごとの短命トークン取得経路と、IDトークン／OAuthアクセストークンの役割の違いを時間軸で掴む',
+    story: {
+      episodeLabel: '第2話',
+      hookTitle: '自動化したいが JSON 鍵は絶対 NG',
+      request:
+        '第1話で権限境界を設計できたマニュアル API を、チーム開発向けに GitHub Actions（外部 CI）から自動テスト・自動デプロイできるようにしてほしいと依頼された。',
+      goal:
+        'Cloud Run 上のアプリと外部 CI の両方から、安全に Google Cloud API を呼び出せる認証方式を整える。',
+      challenge:
+        '「JSON キーを配れば簡単」と案が出たが、セキュリティ担当から「無期限の鍵ファイルは漏えい事故のもと。1 つも作るな」と却下。さらに「Mac では動くのに Cloud Run では 403」という現象も起きた。',
+      nextBridge: {
+        nextLessonId: 'w01-p3',
+        nextLabel: '第3話：リソース階層と Secret Manager へ',
+        teaser:
+          '鍵なしで安全に動かせるようになった。次は検索強化のため外部 API キーを追加するが、「他の秘密まで見えてしまう」継承の罠に直面する。',
+      },
+    },
     visualTypeLabel: '3環境比較・TTLタイムライン',
     estimatedMinutes: 6,
     examQuiz: {
@@ -359,6 +407,22 @@ export const WEEK01_LESSONS: LessonData[] = [
     shortTitle: 'リソース階層と Secret Manager',
     title: 'IAM の継承と最小スコープ設計',
     tagline: '上位の Allow ポリシーは下位すべてへ「足し算」で継承される。付与場所による影響範囲を体感する',
+    story: {
+      episodeLabel: '第3話',
+      hookTitle: 'API キーを足したら別の秘密まで見える',
+      request:
+        'マニュアル回答の精度を上げるため、「外部の検索・AI API と連携させたい。API キーはコードに直書きせず Secret Manager で管理して」と追加依頼が来た。',
+      goal:
+        'Cloud Run の実行時 ID に、同じプロジェクト内の複数シークレットのうち「対象 API キー 1 件だけ」を読み取れる権限を与える。',
+      challenge:
+        'プロジェクト全体に閲覧ロールを付けたら、他チームが置いた DB パスワード等のシークレットまで読めてしまうことが発覚。子リソース側の設定を空にしても読めてしまう「継承の罠」に直面した。',
+      nextBridge: {
+        nextLessonId: 'w01-p4',
+        nextLabel: '第4話：予算通知とクォータの境界へ',
+        teaser:
+          '権限・認証・秘密情報の設計が揃った。いよいよ社内テスト公開の直前、マネージャーから「予算で課金を止めておいて」と頼まれるが…',
+      },
+    },
     visualTypeLabel: '階層ツリー・許可伝播ヒートマップ',
     estimatedMinutes: 5,
     examQuiz: {
@@ -485,6 +549,21 @@ export const WEEK01_LESSONS: LessonData[] = [
     shortTitle: '予算通知とクォータの境界',
     title: '非同期の予算通知 vs 同期のクォータ',
     tagline: 'リクエスト実行と課金集計には時間差がある。「気づく仕組み」と「その場で止める仕組み」を対比する',
+    story: {
+      episodeLabel: '第4話',
+      hookTitle: '公開直前「予算で課金は止まるよね？」',
+      request:
+        'ついにマニュアル回答アプリの社内テスト公開が目前。マネージャーから「検証中にバグやアクセス集中で請求が跳ね上がったら困る。月額予算を設定して上限で止まるようにして」と依頼された。',
+      goal:
+        '想定外のアクセスやバグが起きても、費用異常に早く気づき、かつ利用量そのものが暴走しない安全な運用ガードレールを整える。',
+      challenge:
+        '調べると「Cloud Billing の予算は通知が出るだけで、100% に達しても利用は止まらない」と判明。しかも課金集計には時間差（ラグ）があり、このままでは週末の暴走を防げない。',
+      nextBridge: {
+        nextLabel: '第1週ストーリー完了 → 次は第2週（安全なリリースと切り戻し）へ',
+        teaser:
+          '安全に動かし始める 4 つの壁をすべて突破しました！第2週では、アプリを更新しても壊さず切り戻せるリビジョン設計へ進みます。',
+      },
+    },
     visualTypeLabel: 'リアルタイム課金曲線・非同期ラグ比較',
     estimatedMinutes: 5,
     examQuiz: {

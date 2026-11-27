@@ -64,8 +64,8 @@ export function Sidebar({
         </nav>
 
         <div className="sidebar-head" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
-          <p className="sidebar-kicker">Week 1・基礎</p>
-          <h2 className="sidebar-heading">IAM と Cloud Run</h2>
+          <p className="sidebar-kicker">Week 1・立ち上げ編</p>
+          <h2 className="sidebar-heading">社内マニュアル回答アプリ</h2>
         </div>
 
         <nav aria-label="第1週の単元">
@@ -89,7 +89,9 @@ export function Sidebar({
                     </span>
                     <span className="lesson-nav-copy">
                       <span className="lesson-meta-title">{lesson.shortTitle}</span>
-                      <span className="lesson-meta-sub">{lesson.domain}</span>
+                      <span className="lesson-meta-sub">
+                        {lesson.story.episodeLabel}：{lesson.story.hookTitle}
+                      </span>
                     </span>
                   </button>
                 </li>
