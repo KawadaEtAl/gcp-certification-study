@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 446" width="440" height="446" role="img" aria-label="課金の集計と、利用を制御する仕組み">
+  <title>課金の集計と、利用を制御する仕組み</title>
+  <defs><marker id="notes-w1-4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0l10 5-10 5z" fill="#627085"/></marker></defs>
+  <rect x=".5" y=".5" width="439" height="445" rx="16" fill="#fff" stroke="#c9d2dc"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, Hiragino Sans, sans-serif" fill="#162234">
+    <rect x="9" y="9" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="27" r="10" fill="#fff2d8"/>
+    <text x="25" y="32" font-size="14" font-weight="700" text-anchor="middle" fill="#74480d">1</text>
+    <text x="42" y="33" font-size="17" font-weight="700">利用のあとに費用を集計</text>
+    <rect x="18" y="43" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="43" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="62" font-size="16" font-weight="650" text-anchor="middle">サービス利用</text>
+    <text x="349" y="62" font-size="16" font-weight="650" text-anchor="middle">Cloud Billing</text>
+    <path d="M170 57H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-4)"/>
+    <text x="19" y="95" font-size="15" fill="#42536a">集計・反映</text>
+    <rect x="187" y="78" width="235" height="23" rx="11" fill="#fff2d8"/>
+    <text x="304" y="95" font-size="16" font-weight="650" text-anchor="middle" fill="#74480d">利用から時間差</text>
+    <rect x="9" y="117" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="135" r="10" fill="#fff2d8"/>
+    <text x="25" y="140" font-size="14" font-weight="700" text-anchor="middle" fill="#74480d">2</text>
+    <text x="42" y="141" font-size="17" font-weight="700">しきい値に達したら通知</text>
+    <rect x="18" y="151" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="151" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="170" font-size="16" font-weight="650" text-anchor="middle">予算しきい値</text>
+    <text x="349" y="170" font-size="16" font-weight="650" text-anchor="middle">メール／Pub/Sub</text>
+    <path d="M170 165H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-4)"/>
+    <text x="19" y="203" font-size="15" fill="#42536a">しきい値到達</text>
+    <rect x="187" y="186" width="235" height="23" rx="11" fill="#fff2d8"/>
+    <text x="304" y="203" font-size="16" font-weight="650" text-anchor="middle" fill="#74480d">通知だけでは停止しない</text>
+    <rect x="9" y="225" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="243" r="10" fill="#eaf1fb"/>
+    <text x="25" y="248" font-size="14" font-weight="700" text-anchor="middle" fill="#1e477f">3</text>
+    <text x="42" y="249" font-size="17" font-weight="700">利用量の上限は別に設定</text>
+    <rect x="18" y="259" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="259" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="278" font-size="16" font-weight="650" text-anchor="middle">利用リクエスト</text>
+    <text x="349" y="278" font-size="16" font-weight="650" text-anchor="middle">対象サービス</text>
+    <path d="M170 273H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-4)"/>
+    <text x="19" y="311" font-size="15" fill="#42536a">クォータ</text>
+    <rect x="187" y="294" width="235" height="23" rx="11" fill="#eaf1fb"/>
+    <text x="304" y="311" font-size="16" font-weight="650" text-anchor="middle" fill="#1e477f">対象の利用量を制御</text>
+    <rect x="9" y="333" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="351" r="10" fill="#fff2d8"/>
+    <text x="25" y="356" font-size="14" font-weight="700" text-anchor="middle" fill="#74480d">4</text>
+    <text x="42" y="357" font-size="17" font-weight="700">停止を許せる実習環境</text>
+    <rect x="18" y="367" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="367" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="386" font-size="16" font-weight="650" text-anchor="middle">Pub/Sub通知</text>
+    <text x="349" y="386" font-size="16" font-weight="650" text-anchor="middle">別途用意した処理</text>
+    <path d="M170 381H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-4)"/>
+    <text x="19" y="419" font-size="15" fill="#42536a">停止を許容</text>
+    <rect x="187" y="402" width="235" height="23" rx="11" fill="#fff2d8"/>
+    <text x="304" y="419" font-size="16" font-weight="650" text-anchor="middle" fill="#74480d">停止を試みる・遅延あり</text>
+  </g>
+</svg>

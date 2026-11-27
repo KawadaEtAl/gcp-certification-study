@@ -4,3 +4,6 @@
 .env.*
 .terraform/
 *.tfstate*
+node_modules/
+app/dist/
+*.tsbuildinfo

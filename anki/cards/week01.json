@@ -1,0 +1,251 @@
+[
+  {
+    "id": "pca-w01-001",
+    "category": "設計即断",
+    "topic": "第1週 IAMとCloud Run",
+    "question": "非公開のCloud Runに社内ジョブからアクセスします。\n誰に、どのリソースで、何を付与しますか？",
+    "answer": "社内ジョブの呼び出し元IDに、対象サービスの Cloud Run Invoker。",
+    "reason": "呼び出し元に invoker を付与し、リクエストにはサービス宛てのIDトークンを付けます。",
+    "flip_point": "アプリ内からStorageを読む権限は実行時IDで管理します。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-1",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::iam",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"呼び出し元ID → IDトークン ＋ Invoker → 非公開Cloud Run\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">呼び出し元ID</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">IDトークン ＋ Invoker</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">非公開Cloud Run</text></svg>"
+  },
+  {
+    "id": "pca-w01-002",
+    "category": "切り分け",
+    "topic": "第1週 IAMとCloud Run",
+    "question": "Cloud Runのデプロイで iam.serviceAccounts.actAs が拒否されました。\n誰のどの権限を確認しますか？",
+    "answer": "デプロイ担当が、割り当てるサービスアカウント上で actAs を持つか確認する。",
+    "reason": "Service Account User は actAs を含みます。Cloud Run自体のデプロイ権限も別途必要です。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-1",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::iam",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"デプロイ担当 → actAs を確認 → 割り当て先のサービスアカウント\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">デプロイ担当</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">actAs を確認</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">割り当て先のサービスアカウント</text></svg>"
+  },
+  {
+    "id": "pca-w01-003",
+    "category": "設計即断",
+    "topic": "第1週 IAMとCloud Run",
+    "question": "Cloud Runに指定バケットのマニュアルを読ませます。\nどのIDにどこでロールを付けますか？",
+    "answer": "専用の実行時サービスアカウントに、対象バケットの Storage Object Viewer。",
+    "reason": "Cloud Storage APIの呼び出しは、アプリの実行時IDで行われます。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-1",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::storage",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"実行時サービスアカウント → Object Viewer を対象に付与 → 指定バケット\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">実行時サービスアカウント</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Object Viewer を対象に付与</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">指定バケット</text></svg>"
+  },
+  {
+    "id": "pca-w01-004",
+    "category": "条件反転",
+    "topic": "第1週 IAMとCloud Run",
+    "question": "実行時IDに対象バケットの Storage Object Viewer だけがあります。\n取得と新規オブジェクト作成はどうなりますか？",
+    "answer": "既存オブジェクトは取得でき、新規作成は拒否される。",
+    "reason": "Object Viewer は取得・一覧の権限を含みます。作成権限は含みません。",
+    "flip_point": "新規作成が必要なら Object Creator などを検討します。上書きや削除は別の要件です。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-1",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::storage",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Object Viewer → 操作ごとに判定 → 取得 ✓　新規作成 ✕\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Object Viewer</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">操作ごとに判定</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">取得 ✓　新規作成 ✕</text></svg>"
+  },
+  {
+    "id": "pca-w01-005",
+    "category": "切り分け",
+    "topic": "第1週 IAMとCloud Run",
+    "question": "呼び出しはアプリに到達していますが、Cloud Storage APIが403を返します。\n最初に何を見ますか？",
+    "answer": "Cloud Runの実行時IDと、対象バケットに対する有効な権限。",
+    "reason": "入口のInvokerはCloud Runサービスを呼ぶ権限です。アプリのStorage操作には別の許可が必要です。",
+    "flip_point": "アプリに到達していなければ、入口のIAMとIDトークンを調べます。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-1",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::cloud-run",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Cloud Runには到達 ✓ → 次に実行時IDの権限を確認 → Cloud Storage APIが拒否 ✕\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Cloud Runには到達 ✓</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">次に実行時IDの権限を確認</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">Cloud Storage APIが拒否 ✕</text></svg>"
+  },
+  {
+    "id": "pca-w01-006",
+    "category": "ひっかけ",
+    "topic": "第1週 鍵を使わない認証",
+    "question": "Cloud Run上のクライアントライブラリでGoogle Cloud APIに接続します。\nJSONキーの代わりに、何が認証情報を供給しますか？",
+    "answer": "ADCがメタデータサーバー経由で、サービスIDの短命な認証情報を取得する。",
+    "reason": "Cloud Runに設定した実行時サービスアカウントの認証情報が使われます。",
+    "flip_point": "API操作を許可するIAMは対象リソース側で設定します。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-2",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Cloud Runの実行時ID → ADC → メタデータサーバー → 短命アクセストークン\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Cloud Runの実行時ID</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">ADC → メタデータサーバー</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">短命アクセストークン</text></svg>"
+  },
+  {
+    "id": "pca-w01-007",
+    "category": "設計即断",
+    "topic": "第1週 鍵を使わない認証",
+    "question": "外部CIがOIDCトークンを発行できます。\n長期キーを保存せず、Google Cloudにデプロイする方法は？",
+    "answer": "Workload Identity Federationで、外部のIDを短命のGoogle Cloud認証情報に交換する。",
+    "reason": "信頼する発行元に加え、リポジトリなどの属性で許可対象を絞れます。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-2",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"外部CIのOIDCトークン → Workload Identity Federation → 短命のGoogle Cloud認証情報\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">外部CIのOIDCトークン</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Workload Identity Federation</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">短命のGoogle Cloud認証情報</text></svg>"
+  },
+  {
+    "id": "pca-w01-008",
+    "category": "条件反転",
+    "topic": "第1週 鍵を使わない認証",
+    "question": "Mac上のコードで、本番の実行時サービスアカウントと同じ権限を試したいです。\nローカルADCをどう設定しますか？",
+    "answer": "借用を許可されたユーザーで、サービスアカウントを借用するADCを設定する。",
+    "reason": "対応クライアントでは gcloud auth application-default login の --impersonate-service-account を利用できます。",
+    "flip_point": "ユーザー自身の権限を試すだけならユーザーADCで十分です。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-2",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Macの開発者 → 許可されたサービスアカウントを借用 → 本番と同じ主体としてAPIを試す\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Macの開発者</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">許可されたサービスアカウントを借用</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">本番と同じ主体としてAPIを試す</text></svg>"
+  },
+  {
+    "id": "pca-w01-009",
+    "category": "ひっかけ",
+    "topic": "第1週 IAM継承とSecret Manager",
+    "question": "フォルダで付与されたIAMの許可を、配下のプロジェクトで同じ付与を省くことで消せますか？",
+    "answer": "消せない。上位からの許可は子リソースに継承される。",
+    "reason": "子リソースの許可ポリシーと親から継承した許可が共に適用されます。",
+    "flip_point": "付与元や別経路の許可を確認します。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-3",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::iam",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"フォルダの許可 → 下位に継承 → プロジェクトの許可に加算\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">フォルダの許可</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">下位に継承</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">プロジェクトの許可に加算</text></svg>"
+  },
+  {
+    "id": "pca-w01-010",
+    "category": "設計即断",
+    "topic": "第1週 IAM継承とSecret Manager",
+    "question": "アプリに一つのシークレットの値だけを読ませたいです。\n最小範囲の付与は？",
+    "answer": "実行時IDに、対象シークレット上で Secret Manager Secret Accessor を付ける。",
+    "reason": "シークレット単位なら、同じプロジェクト内の他の値への許可を広げずに済みます。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-3",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"実行時サービスアカウント → Secret Accessorを1件に付与 → 指定シークレットの値\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">実行時サービスアカウント</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Secret Accessorを1件に付与</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">指定シークレットの値</text></svg>"
+  },
+  {
+    "id": "pca-w01-011",
+    "category": "切り分け",
+    "topic": "第1週 IAM継承とSecret Manager",
+    "question": "シークレット自身のIAMに実行時IDが見えませんが、アプリは値を読み取れます。\n何を確認しますか？",
+    "answer": "上位リソースの許可と、グループなどを介した付与を確認する。",
+    "reason": "シークレットのポリシーだけを見ると、継承されたアクセスを見落とします。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-3",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"親リソースの許可／グループ → 別経路の有効な許可を確認 → シークレットの値を取得\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">親リソースの許可／グループ</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">別経路の有効な許可を確認</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">シークレットの値を取得</text></svg>"
+  },
+  {
+    "id": "pca-w01-012",
+    "category": "条件反転",
+    "topic": "第1週 IAM継承とSecret Manager",
+    "question": "専用プロジェクトに今後追加されるものも含め、すべてのシークレットを読む要件になりました。\nどの付与範囲が候補ですか？",
+    "answer": "プロジェクト単位の Secret Manager Secret Accessor。",
+    "reason": "配下のシークレットに許可が継承されます。",
+    "flip_point": "1件だけを読む要件なら、対象シークレット単位に戻します。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-3",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::security",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"プロジェクトでSecret Accessor → 配下すべてに継承 → 既存と将来のシークレット\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">プロジェクトでSecret Accessor</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">配下すべてに継承</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">既存と将来のシークレット</text></svg>"
+  },
+  {
+    "id": "pca-w01-013",
+    "category": "ひっかけ",
+    "topic": "第1週 予算通知とクォータ",
+    "question": "Cloud Billingの予算が100%に達しました。\n予算設定だけで利用や請求は止まりますか？",
+    "answer": "止まらない。予算は費用の監視と通知に使う。",
+    "reason": "予算のしきい値自体に、利用を止める効果はありません。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-4",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::billing",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"予算がしきい値に到達 → メールやPub/Subで通知 → 利用・課金は自動停止しない\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">予算がしきい値に到達</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">メールやPub/Subで通知</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">利用・課金は自動停止しない</text></svg>"
+  },
+  {
+    "id": "pca-w01-014",
+    "category": "条件反転",
+    "topic": "第1週 予算通知とクォータ",
+    "question": "予算超過時、本番と使い捨て実習プロジェクトを同じ方法で自動停止しますか？",
+    "answer": "本番の継続稼働が要件なら、まず通知と対象を絞った対応を設計する。",
+    "reason": "課金を無効化するとサービス停止を招き得ます。Pub/Sub通知にも時間差があります。",
+    "flip_point": "停止を許容できる実習プロジェクトなら、通知起点の自動化も候補です。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-4",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::billing",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"予算超過の通知 → 停止を許せる環境か → 本番は通知／実習は停止も候補\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">予算超過の通知</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">停止を許せる環境か</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">本番は通知／実習は停止も候補</text></svg>"
+  },
+  {
+    "id": "pca-w01-015",
+    "category": "設計即断",
+    "topic": "第1週 予算通知とクォータ",
+    "question": "特定サービスのリソース利用量を抑えたいです。\n予算通知に何を組み合わせますか？",
+    "answer": "変更可能なサービスのクォータや、サービス固有の上限設定を組み合わせる。",
+    "reason": "予算は費用増加を検知し、クォータは対象の利用量を制限します。",
+    "flip_point": "クォータは月額請求全体の上限ではありません。",
+    "source_ref": "notes/week01-iam-cloud-run.md#part-4",
+    "tags": [
+      "gcp::pca",
+      "week::w01",
+      "domain::billing",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"予算通知：増加を検知 → 目的の違う制御を組み合わせる → クォータ：特定の利用量を制限\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">予算通知：増加を検知</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">目的の違う制御を組み合わせる</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">クォータ：特定の利用量を制限</text></svg>"
+  }
+]

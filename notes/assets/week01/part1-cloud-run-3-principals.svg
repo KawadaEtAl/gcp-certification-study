@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 446" width="440" height="446" role="img" aria-label="Cloud Runの3つの権限チェック">
+  <title>Cloud Runの3つの権限チェック</title>
+  <defs><marker id="notes-w1-1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0l10 5-10 5z" fill="#627085"/></marker></defs>
+  <rect x=".5" y=".5" width="439" height="445" rx="16" fill="#fff" stroke="#c9d2dc"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, Hiragino Sans, sans-serif" fill="#162234">
+    <rect x="9" y="9" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="27" r="10" fill="#e5f6eb"/>
+    <text x="25" y="32" font-size="14" font-weight="700" text-anchor="middle" fill="#135938">1</text>
+    <text x="42" y="33" font-size="17" font-weight="700">設定時</text>
+    <rect x="18" y="43" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="43" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="62" font-size="16" font-weight="650" text-anchor="middle">デプロイ担当</text>
+    <text x="349" y="62" font-size="16" font-weight="650" text-anchor="middle">実行時ID</text>
+    <path d="M170 57H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-1)"/>
+    <text x="19" y="95" font-size="15" fill="#42536a">actAs</text>
+    <rect x="187" y="78" width="235" height="23" rx="11" fill="#e5f6eb"/>
+    <text x="304" y="95" font-size="16" font-weight="650" text-anchor="middle" fill="#135938">割り当てを許可</text>
+    <rect x="9" y="117" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="135" r="10" fill="#e5f6eb"/>
+    <text x="25" y="140" font-size="14" font-weight="700" text-anchor="middle" fill="#135938">2</text>
+    <text x="42" y="141" font-size="17" font-weight="700">受信時</text>
+    <rect x="18" y="151" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="151" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="170" font-size="16" font-weight="650" text-anchor="middle">呼び出し元</text>
+    <text x="349" y="170" font-size="16" font-weight="650" text-anchor="middle">Cloud Run</text>
+    <path d="M170 165H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-1)"/>
+    <text x="19" y="203" font-size="15" fill="#42536a">Invoker</text>
+    <rect x="187" y="186" width="235" height="23" rx="11" fill="#e5f6eb"/>
+    <text x="304" y="203" font-size="16" font-weight="650" text-anchor="middle" fill="#135938">入口を通過</text>
+    <rect x="9" y="225" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="243" r="10" fill="#e5f6eb"/>
+    <text x="25" y="248" font-size="14" font-weight="700" text-anchor="middle" fill="#135938">3</text>
+    <text x="42" y="249" font-size="17" font-weight="700">実行時・読み取り</text>
+    <rect x="18" y="259" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="259" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="278" font-size="16" font-weight="650" text-anchor="middle">実行時ID</text>
+    <text x="349" y="278" font-size="16" font-weight="650" text-anchor="middle">Cloud Storage</text>
+    <path d="M170 273H267" stroke="#627085" stroke-width="2" marker-end="url(#notes-w1-1)"/>
+    <text x="19" y="311" font-size="15" fill="#42536a">Object Viewer</text>
+    <rect x="187" y="294" width="235" height="23" rx="11" fill="#e5f6eb"/>
+    <text x="304" y="311" font-size="16" font-weight="650" text-anchor="middle" fill="#135938">オブジェクトを取得</text>
+    <rect x="9" y="333" width="422" height="101" rx="11" fill="#f6f8fa"/>
+    <circle cx="25" cy="351" r="10" fill="#fce9e8"/>
+    <text x="25" y="356" font-size="14" font-weight="700" text-anchor="middle" fill="#8c2628">4</text>
+    <text x="42" y="357" font-size="17" font-weight="700">実行時・書き込み</text>
+    <rect x="18" y="367" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <rect x="276" y="367" width="146" height="27" rx="7" fill="#fff" stroke="#c9d2dc"/>
+    <text x="91" y="386" font-size="16" font-weight="650" text-anchor="middle">実行時ID</text>
+    <text x="349" y="386" font-size="16" font-weight="650" text-anchor="middle">Cloud Storage</text>
+    <path d="M173 381H215" stroke="#8c2628" stroke-width="2"/>
+    <path d="M215 377l8 8m0-8-8 8" stroke="#8c2628" stroke-width="2"/>
+    <text x="19" y="419" font-size="15" fill="#42536a">作成権限</text>
+    <rect x="187" y="402" width="235" height="23" rx="11" fill="#fce9e8"/>
+    <text x="304" y="419" font-size="16" font-weight="650" text-anchor="middle" fill="#8c2628">拒否（403）</text>
+  </g>
+</svg>
