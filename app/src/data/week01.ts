@@ -178,6 +178,50 @@ export const WEEK01_LESSONS: LessonData[] = [
       { label: 'サービスIDの設定', url: 'https://docs.cloud.google.com/run/docs/configuring/services/service-identity' },
       { label: 'Storage の IAM ロール', url: 'https://docs.cloud.google.com/storage/docs/access-control/iam-roles' },
     ],
+    consoleScreens: [
+      {
+        id: 'w01-p1-iam-permissions',
+        title: 'IAM「許可」ページ（プロジェクト権限一覧）',
+        menuPath: 'IAM と管理 › IAM › 許可',
+        consoleUrl: 'https://console.cloud.google.com/iam-admin/iam?hl=ja',
+        imagePath: './screenshots/week01/w01-p1-iam-permissions.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p1-iam-permissions.png',
+        width: 1440,
+        height: 960,
+        caption: 'プロジェクト単位で「どのプリンシパルに何のロールが付いているか」を確認・付与する基本画面です。デフォルト SA に編集者（レガシー）が付いていないかもここで見えます。',
+        lookFor: [
+          {
+            label: 'プリンシパルとロールの対応',
+            detail: 'ユーザーやサービスアカウントごとに、広すぎる基本ロール（オーナー／編集者）が付いていないかを確認します。',
+          },
+          {
+            label: 'セキュリティ分析情報（過剰な権限）',
+            detail: '未使用の権限が多いアカウントには IAM Recommender の警告バッジが表示されます。',
+          },
+        ],
+      },
+      {
+        id: 'w01-p1-cloud-run-services',
+        title: 'Cloud Run「サービス」一覧・セキュリティ設定',
+        menuPath: 'Cloud Run › サービス',
+        consoleUrl: 'https://console.cloud.google.com/run?hl=ja',
+        imagePath: './screenshots/week01/w01-p1-cloud-run-services.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p1-cloud-run-services.png',
+        width: 1440,
+        height: 960,
+        caption: '非公開サービスの「認証が必要（`roles/run.invoker`）」状態と、各サービスに割り当てられた実行時サービスアカウントを確認する画面です。',
+        lookFor: [
+          {
+            label: '認証列（入口の境界）',
+            detail: '「認証が必要」なら `roles/run.invoker` と有効な ID トークンがない呼び出しを入口で 403 拒否します。',
+          },
+          {
+            label: 'セキュリティタブ（実行時 ID）',
+            detail: 'デフォルトの Compute Engine SA ではなく、最小権限の専用サービスアカウントが割り当てられているかを見ます。',
+          },
+        ],
+      },
+    ],
     ankiCardIds: ['pca-w01-001', 'pca-w01-002', 'pca-w01-003', 'pca-w01-004', 'pca-w01-005'],
     labPredictionPrompt: '呼び出し元の Invoker を外したときと、実行時IDの Object Viewer を外したとき、それぞれリクエストはどこで止まるか？',
   },
@@ -259,6 +303,50 @@ export const WEEK01_LESSONS: LessonData[] = [
       { label: 'Cloud Run のサービスID', url: 'https://docs.cloud.google.com/run/docs/securing/service-identity' },
       { label: '外部 CI の Workload Identity Federation', url: 'https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines' },
       { label: 'ローカル開発環境の ADC', url: 'https://docs.cloud.google.com/docs/authentication/set-up-adc-local-dev-environment' },
+    ],
+    consoleScreens: [
+      {
+        id: 'w01-p2-service-accounts',
+        title: 'IAM「サービス アカウント」一覧',
+        menuPath: 'IAM と管理 › サービス アカウント',
+        consoleUrl: 'https://console.cloud.google.com/iam-admin/serviceaccounts?hl=ja',
+        imagePath: './screenshots/week01/w01-p2-service-accounts.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p2-service-accounts.png',
+        width: 1440,
+        height: 960,
+        caption: '実行時 ID を作成・管理する画面です。長期 JSON 鍵を発行していない（「キーなし」）ことと、サービスアカウント自体の権限タブ（`actAs`）を確認できます。',
+        lookFor: [
+          {
+            label: 'キー ID 列が空（キーなし）',
+            detail: 'Cloud Run の ADC 構成では JSON 鍵を作らず、メタデータサーバーから短命トークンを取得します。',
+          },
+          {
+            label: '各 SA の「権限」タブ',
+            detail: '誰がこの SA を割り当て・借用できるか（`roles/iam.serviceAccountUser` 等）を管理する場所です。',
+          },
+        ],
+      },
+      {
+        id: 'w01-p2-wif-pools',
+        title: 'Workload Identity 連携（プール管理）',
+        menuPath: 'IAM と管理 › Workload Identity 連携',
+        consoleUrl: 'https://console.cloud.google.com/iam-admin/workload-identity-pools?hl=ja',
+        imagePath: './screenshots/week01/w01-p2-wif-pools.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p2-wif-pools.png',
+        width: 1440,
+        height: 926,
+        caption: 'GitHub Actions などの外部 CI が発行した OIDC トークンを信頼し、短命な Google Cloud 認証情報へ交換する設定画面です。',
+        lookFor: [
+          {
+            label: 'プールと OIDC プロバイダ',
+            detail: '外部 IdP の発行元（例：`https://token.actions.githubusercontent.com`）を登録します。',
+          },
+          {
+            label: '属性条件（attributeCondition）',
+            detail: '特定リポジトリや `main` ブランチのみ許可するよう絞り込むのが必須です。',
+          },
+        ],
+      },
     ],
     ankiCardIds: ['pca-w01-006', 'pca-w01-007', 'pca-w01-008', 'pca-w01-009'],
     labPredictionPrompt: 'JSON キーファイルを1つも作らずに Cloud Run がバケットを読める仕組みを、メタデータサーバーと実行時IDの関係で説明できるか？',
@@ -342,6 +430,50 @@ export const WEEK01_LESSONS: LessonData[] = [
       { label: 'IAM Deny の概要', url: 'https://docs.cloud.google.com/iam/docs/deny-overview' },
       { label: 'Secret Manager のアクセス制御', url: 'https://docs.cloud.google.com/secret-manager/docs/access-control' },
     ],
+    consoleScreens: [
+      {
+        id: 'w01-p3-secret-manager',
+        title: 'Secret Manager 一覧・シークレット単位の権限',
+        menuPath: 'セキュリティ › Secret Manager',
+        consoleUrl: 'https://console.cloud.google.com/security/secret-manager?hl=ja',
+        imagePath: './screenshots/week01/w01-p3-secret-manager.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p3-secret-manager.png',
+        width: 1440,
+        height: 926,
+        caption: 'プロジェクト全体ではなく「個別のシークレット単体」に対して `roles/secretmanager.secretAccessor` を付与する画面です。',
+        lookFor: [
+          {
+            label: 'シークレット詳細 › 権限タブ',
+            detail: '最小スコープで 1 件の API キーだけ読ませたいときは、IAM 画面ではなくここに追加します。',
+          },
+          {
+            label: '上位継承の確認',
+            detail: '一覧が空でもプロジェクト階層に権限があれば読み取れてしまう点に注意します。',
+          },
+        ],
+      },
+      {
+        id: 'w01-p3-iam-deny',
+        title: 'IAM「許可しない（Deny）」タブ',
+        menuPath: 'IAM と管理 › IAM › 許可しない',
+        consoleUrl: 'https://console.cloud.google.com/iam-admin/iam?hl=ja',
+        imagePath: './screenshots/week01/w01-p3-iam-deny.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p3-iam-deny.png',
+        width: 1280,
+        height: 821,
+        caption: '上位から継承された Allow ポリシーより優先して特定操作を強制遮断する IAM Deny ポリシーの確認・作成画面です。',
+        lookFor: [
+          {
+            label: '「許可」タブの隣にある「許可しない」',
+            detail: 'Allow は足し算でしか継承されませんが、Deny ポリシーは Allow に優先してブロックします。',
+          },
+          {
+            label: 'ガードレールとしての位置づけ',
+            detail: '基本は上位の広い Allow を外すのが第一選択で、例外的な遮断に Deny を使います。',
+          },
+        ],
+      },
+    ],
     ankiCardIds: ['pca-w01-010', 'pca-w01-011', 'pca-w01-012'],
     labPredictionPrompt: 'もしバケットではなくプロジェクトに Storage Object Viewer を付けてしまった場合、後から追加した別バケットへの読み取りはどうなるか？',
   },
@@ -422,6 +554,50 @@ export const WEEK01_LESSONS: LessonData[] = [
     docLinks: [
       { label: '予算とアラート（Cloud Billing）', url: 'https://docs.cloud.google.com/billing/docs/how-to/budgets' },
       { label: '予算通知に応じたプログラム処理', url: 'https://docs.cloud.google.com/billing/docs/how-to/notify' },
+    ],
+    consoleScreens: [
+      {
+        id: 'w01-p4-billing-budgets',
+        title: 'お支払い「予算とアラート」',
+        menuPath: 'お支払い › 予算とアラート',
+        consoleUrl: 'https://console.cloud.google.com/billing/budgets?hl=ja',
+        imagePath: './screenshots/week01/w01-p4-billing-budgets.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p4-billing-budgets.png',
+        width: 1440,
+        height: 926,
+        caption: '月額予算としきい値（50% / 90% / 100%）に応じたメール／Pub/Sub 通知を設定する画面です。自動停止スイッチは存在しません。',
+        lookFor: [
+          {
+            label: 'しきい値ルールと通知先',
+            detail: '実績額・予測額がしきい値を超えたときにアラートを出す「気づく仕組み」です。',
+          },
+          {
+            label: '集計ラグの前提',
+            detail: 'リアルタイム停止ではなく非同期集計後の通知になるため、利用上限の代わりにはなりません。',
+          },
+        ],
+      },
+      {
+        id: 'w01-p4-quotas',
+        title: '割り当てとシステム上限（Quotas）',
+        menuPath: 'IAM と管理 › 割り当てとシステム上限',
+        consoleUrl: 'https://console.cloud.google.com/iam-admin/quotas?hl=ja',
+        imagePath: './screenshots/week01/w01-p4-quotas.png',
+        expectedFile: 'app/public/screenshots/week01/w01-p4-quotas.png',
+        width: 1440,
+        height: 926,
+        caption: 'API リクエスト数や vCPU 数など、サービスごとの利用量を同期的に頭打ちにするクォータ確認・調整画面です。',
+        lookFor: [
+          {
+            label: 'サービス別・リージョン別の上限',
+            detail: '請求総額（円・ドル）ではなく、対象サービスのリソース利用量に対して上限を掛けます。',
+          },
+          {
+            label: 'Cloud Run の max-instances と併用',
+            detail: 'サービス固有の上限設定と組み合わせることで暴走課金を同期的に防ぎます。',
+          },
+        ],
+      },
     ],
     ankiCardIds: ['pca-w01-013', 'pca-w01-014', 'pca-w01-015'],
     labPredictionPrompt: '自分の学習用プロジェクトで暴走課金を防ぐなら、予算アラート以外に Cloud Run や API で何の上限を設定しておくべきか？',

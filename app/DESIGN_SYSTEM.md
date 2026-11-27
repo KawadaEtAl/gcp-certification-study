@@ -79,6 +79,12 @@
 - **内容の一貫性（Desktop / Mobile / Inspector / JSON）**
   - リソース名（例：`manual-docs`）、数値（例：集計ラグ `55分`）、コンテナ枠ラベル（例：`Cloud Run Service (Private)`）は、デスクトップ図・モバイル図・インスペクタ・JSON の 4 箇所で完全に一致させる。
 
+### GCP Console 実画面スクリーンショット基準
+
+- **配置場所**: 「解説」タブ内に `<ConsoleScreenGallery />` で掲載し、サムネイルクリックでネイティブ `<dialog closedby="any">` の拡大モーダルを開く（4 タブ構成は維持する）。
+- **保存先（単一ソース）**: `app/public/screenshots/weekXX/<slug>.png` に保存し、アプリからは `./screenshots/weekXX/<slug>.png`、Markdown ノートからは `../app/public/screenshots/weekXX/<slug>.png` で参照する。
+- **撮影＆個人情報マスク**: `.agents/skills/gcp-console-screenshot/SKILL.md` の手順に従い、`1280×800`・`?hl=ja` のビューポートで撮影直前に DOM をダミー値（`gcp-study-sandbox` / `study-admin@example.com` / `Taro Yamada` / `123456789012`・アイコン置換）へ書き換えてから保存する。実プロジェクト名やメールアドレス等の置換表は必ず Git 管理外の `local/gcp-mask-config.json` に置く。
+
 ---
 
 ## 6. 完了前の必須検証

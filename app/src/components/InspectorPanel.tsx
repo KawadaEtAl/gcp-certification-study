@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  BookMarked,
   BookOpen,
   Check,
   ChevronDown,
@@ -12,7 +13,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { InspectorTabId, LessonData, StepInsight } from '../types';
+import { getGlossaryTermsForLesson } from '../data/glossary';
 import { QuizCard } from './QuizCard';
+import { ConsoleScreenGallery } from './ConsoleScreenGallery';
 import { BreakableIdentifier, RichText } from './RichText';
 
 interface InspectorPanelProps {
@@ -24,6 +27,7 @@ interface InspectorPanelProps {
   onSelectQuizChoice: (choiceId: string, isCorrect: boolean) => void;
   predictionText: string;
   onChangePrediction: (value: string) => void;
+  onOpenGlossary: (termId?: string) => void;
 }
 
 const TABS: { id: InspectorTabId; label: string; icon: typeof HelpCircle }[] = [
@@ -42,10 +46,12 @@ export function InspectorPanel({
   onSelectQuizChoice,
   predictionText,
   onChangePrediction,
+  onOpenGlossary,
 }: InspectorPanelProps) {
   const [miniOpen, setMiniOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const lessonTerms = getGlossaryTermsForLesson(lesson.id);
 
   const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, idx: number) => {
     let nextIdx: number | null = null;
@@ -116,6 +122,8 @@ export function InspectorPanel({
               selectedChoiceId={selectedChoiceId}
               onSelectChoice={onSelectQuizChoice}
               onJumpToVisual={() => onChangeTab('step')}
+              keyTerms={lessonTerms}
+              onOpenGlossary={onOpenGlossary}
             />
           </div>
         </div>
@@ -222,6 +230,39 @@ export function InspectorPanel({
                 )}
               </div>
             ))}
+
+            {lessonTerms.length > 0 && (
+              <section className="lesson-glossary-box" aria-label="この単元の重要用語">
+                <div className="lesson-glossary-head">
+                  <div>
+                    <p className="panel-kicker">この単元の用語辞典</p>
+                    <h3 className="lesson-glossary-title">タップして意味とイメージを確認</h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="console-action-btn"
+                    onClick={() => onOpenGlossary()}
+                  >
+                    <BookMarked size={13} aria-hidden="true" />
+                    全用語を見る
+                  </button>
+                </div>
+                <div className="term-chip-list">
+                  {lessonTerms.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="term-chip"
+                      onClick={() => onOpenGlossary(item.id)}
+                    >
+                      {item.term}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <ConsoleScreenGallery screens={lesson.consoleScreens} />
 
             <div className="disclosure-box">
               <p className="disclosure-prompt">

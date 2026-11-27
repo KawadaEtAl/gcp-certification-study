@@ -1,4 +1,4 @@
-import { Boxes, Menu, PanelLeftClose, PanelLeftOpen, CheckCircle2 } from 'lucide-react';
+import { BookMarked, Boxes, Menu, PanelLeftClose, PanelLeftOpen, CheckCircle2 } from 'lucide-react';
 
 interface HeaderProps {
   solvedCount: number;
@@ -7,6 +7,7 @@ interface HeaderProps {
   onToggleFocusCanvas: () => void;
   mobileMenuOpen: boolean;
   onToggleMobileMenu: () => void;
+  onOpenGlossary: () => void;
 }
 
 export function Header({
@@ -16,6 +17,7 @@ export function Header({
   onToggleFocusCanvas,
   mobileMenuOpen,
   onToggleMobileMenu,
+  onOpenGlossary,
 }: HeaderProps) {
   return (
     <header className="topbar">
@@ -42,6 +44,16 @@ export function Header({
       </div>
 
       <div className="topbar-actions">
+        <button
+          type="button"
+          className="icon-btn glossary-header-btn"
+          onClick={onOpenGlossary}
+          aria-label="Google Cloud 用語集を開く"
+        >
+          <BookMarked size={15} aria-hidden="true" />
+          <span>用語集</span>
+        </button>
+
         <span className="progress-pill" aria-label={`章頭例題 ${totalCount}問中 ${solvedCount}問正解`}>
           <CheckCircle2 size={14} aria-hidden="true" />
           例題 {solvedCount}/{totalCount}

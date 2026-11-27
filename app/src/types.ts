@@ -2,6 +2,27 @@ export type LessonId = 'w00-overview' | 'w01-p1' | 'w01-p2' | 'w01-p3' | 'w01-p4
 
 export type InspectorTabId = 'quiz' | 'step' | 'deepdive' | 'lab';
 
+export type GlossaryCategoryId =
+  | 'basics'
+  | 'w01-p1'
+  | 'w01-p2'
+  | 'w01-p3'
+  | 'w01-p4'
+  | 'overview';
+
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  subtitle?: string;
+  category: GlossaryCategoryId;
+  lessons: LessonId[];
+  aliases?: string[];
+  summary: string;
+  analogy: string;
+  examPoint: string;
+  relatedIds?: string[];
+}
+
 export interface QuizChoice {
   id: string;
   label: string;
@@ -25,6 +46,26 @@ export interface MiniQuiz {
 export interface DocLink {
   label: string;
   url: string;
+}
+
+export interface ConsoleScreenAnnotation {
+  label: string;
+  detail: string;
+}
+
+export interface ConsoleScreenRef {
+  id: string;
+  title: string;
+  menuPath: string;
+  consoleUrl: string;
+  /** Relative path served from app/public (set once captured and masked). */
+  imagePath?: string;
+  /** Target output file path inside the repository for /browser capture. */
+  expectedFile: string;
+  width?: number;
+  height?: number;
+  caption: string;
+  lookFor: ConsoleScreenAnnotation[];
 }
 
 export interface StepInsight {
@@ -55,6 +96,7 @@ export interface LessonData {
   miniQuiz: MiniQuiz;
   flipCondition: string;
   docLinks: DocLink[];
+  consoleScreens?: ConsoleScreenRef[];
   ankiCardIds: string[];
   labPredictionPrompt: string;
 }

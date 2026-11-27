@@ -1,5 +1,5 @@
-import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
-import type { QuizQuestion } from '../types';
+import { CheckCircle2, XCircle, ArrowRight, BookMarked } from 'lucide-react';
+import type { GlossaryTerm, QuizQuestion } from '../types';
 import { RichText } from './RichText';
 
 interface QuizCardProps {
@@ -7,6 +7,8 @@ interface QuizCardProps {
   selectedChoiceId: string | null;
   onSelectChoice: (choiceId: string, isCorrect: boolean) => void;
   onJumpToVisual: () => void;
+  keyTerms: GlossaryTerm[];
+  onOpenGlossary: (termId?: string) => void;
 }
 
 export function QuizCard({
@@ -14,6 +16,8 @@ export function QuizCard({
   selectedChoiceId,
   onSelectChoice,
   onJumpToVisual,
+  keyTerms,
+  onOpenGlossary,
 }: QuizCardProps) {
   const selected = quiz.choices.find((c) => c.id === selectedChoiceId) ?? null;
 
@@ -24,6 +28,36 @@ export function QuizCard({
       <p className="panel-lead">
         <RichText text={quiz.scenario} />
       </p>
+
+      {keyTerms.length > 0 && (
+        <div className="quiz-glossary-strip" aria-label="この問題に出てくる用語">
+          <div className="quiz-glossary-head">
+            <span className="quiz-glossary-label">
+              <BookMarked size={13} aria-hidden="true" />
+              わからない用語をタップして確認
+            </span>
+            <button
+              type="button"
+              className="quiz-glossary-all-btn"
+              onClick={() => onOpenGlossary()}
+            >
+              一覧
+            </button>
+          </div>
+          <div className="term-chip-list">
+            {keyTerms.slice(0, 6).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="term-chip"
+                onClick={() => onOpenGlossary(item.id)}
+              >
+                {item.term}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="quiz-choices" role="group" aria-label="選択肢">
         {quiz.choices.map((choice) => {

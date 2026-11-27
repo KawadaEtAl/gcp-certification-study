@@ -4,6 +4,7 @@ import type { InspectorTabId, LessonId, StepInsight } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { InspectorPanel } from './components/InspectorPanel';
+import { GlossaryDialog } from './components/GlossaryDialog';
 import { Week0OverviewViz } from './visualizers/Week0OverviewViz';
 import { Part1CloudRunViz } from './visualizers/Part1CloudRunViz';
 import { Part2KeylessAuthViz } from './visualizers/Part2KeylessAuthViz';
@@ -50,6 +51,8 @@ export function App() {
   const [inspectorTab, setInspectorTab] = useState<InspectorTabId>('step');
   const [focusCanvas, setFocusCanvas] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [glossaryTermId, setGlossaryTermId] = useState<string | null>(null);
   const [stepInsight, setStepInsight] = useState<StepInsight>(DEFAULT_INSIGHT);
   const [saved, setSaved] = useState<SavedProgress>(() => loadSavedState());
 
@@ -101,7 +104,19 @@ export function App() {
     setStepInsight(insight);
   }, []);
 
+  const handleOpenGlossary = useCallback((termId?: string) => {
+    setGlossaryTermId(termId ?? null);
+    setGlossaryOpen(true);
+  }, []);
+
+  const handleCloseGlossary = useCallback(() => {
+    setGlossaryOpen(false);
+    setGlossaryTermId(null);
+  }, []);
+
   const solvedCount = WEEK01_LESSONS.filter((l) => saved.solved[l.id]).length;
+  const activeLessonBadge =
+    activeLesson.week === 0 ? 'Week 0' : `Part ${activeLesson.part}`;
 
   return (
     <div className="app-shell">
@@ -116,6 +131,7 @@ export function App() {
         onToggleFocusCanvas={() => setFocusCanvas((prev) => !prev)}
         mobileMenuOpen={mobileMenuOpen}
         onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
+        onOpenGlossary={() => handleOpenGlossary()}
       />
 
       <div className={`workspace ${focusCanvas ? 'focus-canvas' : ''}`}>
@@ -199,8 +215,17 @@ export function App() {
           onSelectQuizChoice={handleSelectQuizChoice}
           predictionText={saved.predictions[activeLesson.id] ?? ''}
           onChangePrediction={handleChangePrediction}
+          onOpenGlossary={handleOpenGlossary}
         />
       </div>
+
+      <GlossaryDialog
+        open={glossaryOpen}
+        activeLessonId={activeLessonId}
+        activeLessonLabel={activeLessonBadge}
+        initialTermId={glossaryTermId}
+        onClose={handleCloseGlossary}
+      />
     </div>
   );
 }

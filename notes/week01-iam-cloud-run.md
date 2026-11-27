@@ -1,5 +1,7 @@
 # 第1週　IAMとCloud Run
 
+> 用語がわからないときは [学習 用語集（Week 0〜1）](glossary.md) を参照してください（[共通基礎](glossary.md#共通基本用語web--クラウド基礎) / [Part 1](glossary.md#part-1cloud-run-と-3-つの権限境界) / [Part 2](glossary.md#part-2鍵を使わない認証adc--wif--トークン) / [Part 3](glossary.md#part-3リソース階層と-secret-manager) / [Part 4](glossary.md#part-4予算通知とクォータfinops)）。
+
 ## Part 1
 
 **例題｜マニュアルを読めるのは誰？**
@@ -40,6 +42,16 @@
 </details>
 
 **条件が変わったら**　新規オブジェクトの作成も必要なら、作成を許す権限を追加で検討します。上書きや削除も必要かは個別に確認します。
+
+**GCP Console の該当画面**
+
+- **IAM「許可」ページ**（`IAM と管理 › IAM › 許可` — [Console で開く](https://console.cloud.google.com/iam-admin/iam?hl=ja)）：プロジェクト単位でプリンシパルとロール、過剰権限の警告を確認する画面。
+
+  ![IAM「許可」ページ（プロジェクト権限一覧）](../app/public/screenshots/week01/w01-p1-iam-permissions.png)
+
+- **Cloud Run「サービス」一覧**（`Cloud Run › サービス` — [Console で開く](https://console.cloud.google.com/run?hl=ja)）：入口の「認証が必要（Invoker）」設定と実行時サービスアカウントを確認する画面。
+
+  ![Cloud Run「サービス」一覧・概要画面](../app/public/screenshots/week01/w01-p1-cloud-run-services.png)
 
 [呼び出し認証](https://docs.cloud.google.com/run/docs/authenticating/overview) ・ [サービスIDの設定](https://docs.cloud.google.com/run/docs/configuring/services/service-identity) ・ [StorageのIAMロール](https://docs.cloud.google.com/storage/docs/access-control/iam-roles)
 
@@ -85,6 +97,16 @@ Cloud Runの入口に送る**IDトークン**は、相手のサービスが「�
 
 **条件が変わったら**　Macで動かすだけなら `gcloud auth application-default login` でユーザーのADCを作れます。本番と同じサービスアカウントの権限を試すなら、借用を許可されたユーザーで `--impersonate-service-account` を使います。
 
+**GCP Console の該当画面**
+
+- **IAM「サービス アカウント」一覧**（`IAM と管理 › サービス アカウント` — [Console で開く](https://console.cloud.google.com/iam-admin/serviceaccounts?hl=ja)）：長期 JSON 鍵を発行していないこと（キーなし）と、各 SA の「権限」タブ（`actAs`）を確認する画面。
+
+  ![IAM「サービス アカウント」一覧](../app/public/screenshots/week01/w01-p2-service-accounts.png)
+
+- **Workload Identity 連携**（`IAM と管理 › Workload Identity 連携` — [Console で開く](https://console.cloud.google.com/iam-admin/workload-identity-pools?hl=ja)）：GitHub Actions 等の外部 CI（OIDC）を信頼して短命トークンへ交換するプール管理画面。
+
+  ![Workload Identity 連携（プール・プロバイダ構成画面）](../app/public/screenshots/week01/w01-p2-wif-pools.png)
+
 [Cloud RunのサービスID](https://docs.cloud.google.com/run/docs/securing/service-identity) ・ [外部CIのWorkload Identity Federation](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines) ・ [ローカルADC](https://docs.cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
 
 ## Part 3
@@ -127,6 +149,16 @@ IAMの**有効なAllowポリシー**は、対象リソースの許可と上位�
 
 **条件が変わったら**　専用プロジェクト内の全シークレットを読む要件なら、プロジェクト単位も候補です。将来追加されるシークレットにも継承される点を確認します。
 
+**GCP Console の該当画面**
+
+- **Secret Manager 一覧・権限**（`セキュリティ › Secret Manager` — [Console で開く](https://console.cloud.google.com/security/secret-manager?hl=ja)）：プロジェクト全体ではなくシークレット単体に `roles/secretmanager.secretAccessor` を付与する画面。
+
+  ![Secret Manager API 画面](../app/public/screenshots/week01/w01-p3-secret-manager.png)
+
+- **IAM「許可しない（Deny）」タブ**（`IAM と管理 › IAM › 許可しない` — [Console で開く](https://console.cloud.google.com/iam-admin/iam?hl=ja)）：上位から継承した Allow より優先して特定操作を止める Deny ポリシーの画面。
+
+  ![IAM「許可しない（Deny）」タブ](../app/public/screenshots/week01/w01-p3-iam-deny.png)
+
 [リソース階層とアクセス制御](https://docs.cloud.google.com/iam/docs/resource-hierarchy-access-control) ・ [IAM Deny](https://docs.cloud.google.com/iam/docs/deny-overview) ・ [Secret Managerのアクセス制御](https://docs.cloud.google.com/secret-manager/docs/access-control)
 
 ## Part 4
@@ -168,6 +200,16 @@ IAMの**有効なAllowポリシー**は、対象リソースの許可と上位�
 </details>
 
 **条件が変わったら**　停止を許容する使い捨ての実習プロジェクトなら、通知を起点とした自動化も候補です。遅延があるため、設定額で確実に支出が止まるとは見なしません。
+
+**GCP Console の該当画面**
+
+- **お支払い「予算とアラート」**（`お支払い › 予算とアラート` — [Console で開く](https://console.cloud.google.com/billing/budgets?hl=ja)）：しきい値通知（メール／Pub/Sub）の設定画面。自動停止スイッチはない。
+
+  ![お支払い「予算と上限」画面](../app/public/screenshots/week01/w01-p4-billing-budgets.png)
+
+- **割り当てとシステム上限**（`IAM と管理 › 割り当てとシステム上限` — [Console で開く](https://console.cloud.google.com/iam-admin/quotas?hl=ja)）：サービスごとの利用量を同期的に制御するクォータ画面。
+
+  ![IAM と管理「割り当てとシステム上限」画面](../app/public/screenshots/week01/w01-p4-quotas.png)
 
 [予算とアラート](https://docs.cloud.google.com/billing/docs/how-to/budgets) ・ [予算通知に応じた処理](https://docs.cloud.google.com/billing/docs/how-to/notify)
 
