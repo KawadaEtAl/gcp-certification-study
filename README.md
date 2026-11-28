@@ -1,5 +1,7 @@
 # Google Cloud 認定の学習記録
 
+> 別案の [Study Light 設計ガイドと部品一覧](app/study-light/README.md) は、Week 1・2 の教材を使った独立した見本です。従来のサイトとその制作基準は引き続き利用できます。
+
 1年で **Professional Cloud Architect（PCA）→ Professional Agentic Architect（PAA）** を目指す。最初の24週間はPCA。ACEの受験は省き、IAM・ネットワーク・デプロイ・監視などの基礎を最初の数週間で実践する。
 
 - [ロードマップ](ROADMAP.md) — 週ごとのテーマ、実践、到達基準
