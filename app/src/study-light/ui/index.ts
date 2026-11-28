@@ -5,3 +5,4 @@ export * from './Lesson';
 export * from './Playback';
 export * from './Shell';
 export * from './Relations';
+export * from './StageStrip';

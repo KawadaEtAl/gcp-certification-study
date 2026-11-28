@@ -1,3 +1,4 @@
+@import './strip.css';
 @import './tokens.css';
 @import './relations.css';
 :where(.study-light) * {

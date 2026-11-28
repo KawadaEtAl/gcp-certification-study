@@ -6,6 +6,7 @@ import {
   Bookmark,
   PanelLeft,
   Menu,
+  Shapes,
   ChevronRight,
   ChevronDown,
   Check,
@@ -19,6 +20,7 @@ import type { LessonData } from '../../types';
 import { HelpProvider, LessonTerms, GlossaryButton, Modal, GuidedText } from './Help';
 import { Explanation, Lab, Quiz, useStored } from './Lesson';
 import { Art } from './Art';
+import { Library } from '../library/Library';
 
 export interface Unit {
   lesson: LessonData;
@@ -67,6 +69,11 @@ function parseRoute(hash: string, units: Unit[]) {
 type Marks = Record<string, boolean>;
 export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: Record<number, string> }) {
   const [hash, setHash] = useState(location.hash);
+  const [back, setBack] = useState(link(units[0]));
+  const library = /^#(art|figures)(\/|$)/.test(hash);
+  useEffect(() => {
+    if (!library) setBack(hash || link(units[0]));
+  }, [library, hash, units]);
   const [collapsed, collapse] = useState(false);
   const [modal, setModal] = useState<'saved' | 'nav' | null>(null);
   const [done, mark, doneError] = useStored<Marks>('done', {}),
@@ -88,10 +95,11 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
   const weeksPage = '#week' + week;
   const next = units[units.indexOf(unit) + 1];
   const progress = thisWeek.filter((u) => done[u.lesson.id]).length;
-  const title = home ? weekTitles[week] : unit.title;
+  const title = library ? '図解ライブラリ' : home ? weekTitles[week] : unit.title;
   useEffect(() => {
     document.title = title + ' | GCP Explorer';
   }, [title]);
+  if (library) return <Library hash={hash} back={back} brand={<Brand url={back} />} />;
   const closeNav = () => setModal(null);
   const num = (l: LessonData) => (
     <span className={'num' + (done[l.id] ? ' finished' : '')}>
@@ -113,6 +121,10 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
         <a href={weeksPage} onClick={closeNav} aria-current={home ? 'page' : undefined}>
           <MapIcon />
           今週の概要
+        </a>
+        <a href="#art" onClick={closeNav}>
+          <Shapes />
+          図解ライブラリ
         </a>
         <GlossaryButton>
           <BookMarked />

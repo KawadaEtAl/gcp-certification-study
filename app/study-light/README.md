@@ -100,7 +100,62 @@ npm run study
 | 詳細・コード・設定画面 | `Modal`・`Inspector`・`CodeBlock`・`Disclosure` | W1 P1の場面名を押す。既存の `ConsoleScreenGallery` は画像がある場合のみ解説に表示 |
 | ストーリー、判断の順序、例題、演習 | `Story`・`Explanation`・`Quiz`・`Lab` | `LessonData` から描画。ラボがない週は予測・作図・ミニ確認を使う |
 
-`ArtName` は `laptop / portal / server / identity / bucket / image / job / badge`。図は省略できる。例えばタグとダイジェストは表記の違いが主題なので、図を2つ並べず文字を揃える。
+図は省略できる。例えばタグとダイジェストは表記の違いが主題なので、図を2つ並べず文字を揃える。
+
+## PCA・PAA のイラスト
+
+[図解ライブラリ](http://127.0.0.1:4198/#art)から日本語名・サービス名・`ArtName` で検索できる。各イラストを押すと、拡大図・64pxの縮小図・用途・コピーできるJSXが開く。透明背景のSVGとして保存できる。[72点の早見表](reference/art-atlas.png)も参照。
+
+すべて描き起こした図解用の絵。名前はサービスの**役割**を表す。製品名、ID、方向、許可や拒否は絵の隣に文字で示す。箱の個数や絵の中の矢印は実構成の台数・配信順・通信経路を保証しない。
+
+| 分類 | `ArtName` |
+|---|---|
+| [ネットワーク](http://127.0.0.1:4198/#art/network) | `router`、`firewall`、`load-balancer`、`dns`、`cdn`、`nat`、`vpn`、`interconnect` |
+| [配置と実行基盤](http://127.0.0.1:4198/#art/compute) | `vpc`、`zone`、`region`、`datacenter`、`vm`、`cluster`、`pod`、`gpu` |
+| [データと復旧](http://127.0.0.1:4198/#art/data) | `sql`、`distributed-db`、`wide-column`、`document-db`、`warehouse`、`cache`、`volume`、`backup` |
+| [非同期処理と開発](http://127.0.0.1:4198/#art/delivery) | `queue`、`topic`、`scheduler`、`stream`、`repository`、`build`、`registry`、`plan` |
+| [セキュリティと運用](http://127.0.0.1:4198/#art/operations) | `key`、`secret`、`policy`、`audit`、`metrics`、`alert`、`trace`、`billing` |
+| [エージェント](http://127.0.0.1:4198/#art/agents) | `agent`、`model`、`workflow`、`tool`、`mcp`、`handoff`、`session`、`memory` |
+| [検索と評価](http://127.0.0.1:4198/#art/knowledge) | `documents`、`chunk`、`embedding`、`vector-index`、`retrieval`、`rerank`、`grounding`、`evaluation` |
+| [人と実行の統制](http://127.0.0.1:4198/#art/governance) | `user`、`team`、`sandbox`、`skills`、`prompt`、`gateway`、`guardrail`、`approval` |
+| [Week 1・2 の基本](http://127.0.0.1:4198/#art/basics) | `laptop`、`portal`、`server`、`identity`、`bucket`、`image`、`job`、`badge` |
+
+### 今後の教材での組み合わせ
+
+[24週計画](../../ROADMAP.md)と、Google Cloud の [PCA 標準試験ガイド](https://services.google.com/fh/files/misc/professional_cloud_architect_exam_guide_english.pdf)・[PAA 試験ガイド](https://services.google.com/fh/files/misc/professional_agentic_architect_exam_guide_english.pdf)を基に選んだ。下表は絵の使い分けの例。リンク先の8本は架空の条件を切り替える見本で、週別の新規単元や公式問題ではない。[PAA のハンズオン](https://cloud.google.com/learn/certification/agentic-architect)は実環境で別に練習する。
+
+| 学習範囲 | 絵にする関係と操作 |
+|---|---|
+| PCA 第3〜4週 | `scheduler` で起動、`queue` で依頼、`job` で実行。[再試行と二重処理](http://127.0.0.1:4198/#figures/retry)では同じ注文 ID が2回届く。 |
+| 第5〜7週 | [VM の外向き通信](http://127.0.0.1:4198/#figures/outbound)。`dns` の問い合わせ、`load-balancer` の振り分け、`nat` の変換を分ける。実行先の比較は `vm / cluster / server`。 |
+| 第8〜10週 | `sql / distributed-db / document-db / wide-column / bucket` をアクセスパターンで比較。イベントの分析は `topic → stream → warehouse`、コストと応答時間は `billing / trace`。 |
+| 第11〜15週 | `plan / policy / audit` で変更前後を追う。[段階リリース](http://127.0.0.1:4198/#figures/release)と[復旧時間・データ損失](http://127.0.0.1:4198/#figures/recovery)を別の図にする。移行時は旧拠点・接続・移行先を並べ、切り戻せる時点を示す。 |
+| 第16〜24週 | ケースごとの制約に合わせ、データの保管場所、モデル、実行環境、評価の絵を組み合わせる。同じ要件に対する2案は `Comparison` で並べる。 |
+| PAA 分野1〜2 | `workflow / prompt / documents` で指示と参照元を分ける。`skills / sandbox / mcp` で開発手順、実行環境、ツールへの接続を区別する。 |
+| 分野3 | [会話と長期記憶](http://127.0.0.1:4198/#figures/context)、[検索候補と回答の根拠](http://127.0.0.1:4198/#figures/rag)。ツール利用は `mcp / tool`、別のエージェントへの依頼は `handoff`。 |
+| 分野4〜5 | [回答と実行履歴の評価](http://127.0.0.1:4198/#figures/evaluation)、[承認と実行権限](http://127.0.0.1:4198/#figures/approval)。`gateway / guardrail / badge / approval` にはそれぞれ仲介する要求、検査対象、実行 ID、承認された操作を添える。 |
+
+### 絵を教材に組み込む
+
+単体の `<Art name="queue" />`、`FlowNode` の `art`、`Comparison` の各項目の `art` に同じ名前を使える。順に並べる場合は [StageStrip](../src/study-light/ui/StageStrip.tsx) に2〜4段階を渡す。矢印は読む順序を示す。複数の主体が行き来する場合は `FlowEdge` で関係を明記する。
+
+```tsx
+import { StageStrip } from '../ui';
+
+export function Indexing() {
+  return <StageStrip label="文書を検索できるようにする手順" steps={[
+    { art: 'documents', label: '原本文書', note: '返品規定 第2版' },
+    { art: 'chunk', label: '分割', note: '見出しごとに区切る' },
+    { art: 'embedding', label: '埋め込み', note: '各節を数値に変換' },
+    { art: 'vector-index', label: '索引', note: '節の ID とともに登録' },
+  ]} />;
+}
+```
+
+- `Art` のみを別のReactアプリで使う場合、[Art.tsx](../src/study-light/ui/Art.tsx) と隣の [art/](../src/study-light/ui/art/) を一緒に置く。幅を指定し高さは自動にする。SVGは装飾扱いのため、意味は隣のテキストで伝える。保存したSVGを単独で使う場合は代替テキストを添える。
+- [形と配色](../src/study-light/ui/art/geometry.tsx)を共有する。新しい絵は該当する分類の描画オブジェクトに追加する。`ArtName` は登録キーから導出され、[日本語名・検索語・用途](../src/study-light/library/objects.ts)に不足があれば型チェックで分かる。IDは分類間で重複させない。
+- [図解例](../src/study-light/library/figures.ts)は各条件の `steps / title / reason` を同じデータに持つ。判定は `pass / stop / wait / unreached` を指定し、`note` に結果を書く。承認待ちと拒否、未到達を区別する。
+- `#art` と `#figures` は週の進捗に含めない。「教材へ戻る」で直前の単元・タブを開く。単元を離れるので再生位置や例題の一時的な選択はリセットする。直接開いたときは Week 1 Part 1 に戻る。
 
 ## 新しい週を作る
 
@@ -155,6 +210,7 @@ mkdir -p local/output/playwright
 cd local
 playwright-cli -s=study-check open http://127.0.0.1:4198/
 playwright-cli -s=study-check run-code --filename=../app/study-light/check.js
+playwright-cli -s=study-check run-code --filename=../app/study-light/check-library.js
 playwright-cli -s=study-check close
 ```
 

@@ -1,78 +1,10 @@
 import React from 'react';
-const ink = '#192925',
-  side = '#cad9d1',
-  mint = '#87e3ab',
-  green = '#4fc98c',
-  paper = '#fbfffa';
-const P = (x: number, y: number, z: number) => [0.95 * (x - y), 0.425 * (x + y) - z];
-type Point = { x?: number; y?: number; z?: number };
-type Size = { w: number; d: number };
-function Surface({
-  x = 0,
-  y = 0,
-  z = 0,
-  face = 'top',
-  children,
-}: Point & { face?: 'top' | 'left' | 'right'; children: React.ReactNode }) {
-  const a = { top: '.95 .425 -.95 .425', left: '.95 .425 0 1', right: '.95 -.425 0 1' }[face];
-  return <g transform={`matrix(${a} ${P(x, y, z).join(' ')})`}>{children}</g>;
-}
-function Box({
-  x = 0,
-  y = 0,
-  z = 0,
-  w,
-  d,
-  h,
-  front = paper,
-  right = side,
-  top = 'white',
-}: Point & Size & { h: number; front?: string; right?: string; top?: string }) {
-  const face = (axes: number[][], fill: string) => (
-    <polygon
-      fill={fill}
-      points={axes.map(([i, j, k]) => P(x + w * i, y + d * j, z + h * k).join(',')).join(' ')}
-    />
-  );
-  return (
-    <>
-      {face(
-        [
-          [0, 1, 0],
-          [1, 1, 0],
-          [1, 1, 1],
-          [0, 1, 1],
-        ],
-        front,
-      )}
-      {face(
-        [
-          [1, 1, 0],
-          [1, 0, 0],
-          [1, 0, 1],
-          [1, 1, 1],
-        ],
-        right,
-      )}
-      {face(
-        [
-          [0, 0, 1],
-          [0, 1, 1],
-          [1, 1, 1],
-          [1, 0, 1],
-        ],
-        top,
-      )}
-    </>
-  );
-}
-const series = (n: number, render: (i: number) => React.ReactNode) =>
-  Array.from({ length: n }, (_, i) => <React.Fragment key={i}>{render(i)}</React.Fragment>);
-const Shadow = ({ w, d }: Size) => (
-  <Surface x={1} y={6} z={-2}>
-    <rect width={w + 5} height={d + 5} rx="7" fill="#d5e6db" stroke="none" />
-  </Surface>
-);
+import { ink, side, mint, green, paper, Box, Surface, Shadow, series } from './art/geometry';
+import { network, compute } from './art/Infrastructure';
+import { data, delivery } from './art/Data';
+import { operations, governance } from './art/Operations';
+import { agents, knowledge } from './art/Agents';
+
 function Laptop({ portal = false }) {
   return (
     <g transform="translate(139 91)">
@@ -221,8 +153,7 @@ function Crate() {
     </g>
   );
 }
-export type ArtName = 'laptop' | 'portal' | 'server' | 'identity' | 'bucket' | 'image' | 'job' | 'badge';
-const objects: Record<ArtName, React.ReactNode> = {
+const basics = {
   laptop: <Laptop />,
   portal: <Laptop portal />,
   bucket: <Storage />,
@@ -252,6 +183,18 @@ const objects: Record<ArtName, React.ReactNode> = {
     </>
   ),
 };
+const objects = {
+  ...basics,
+  ...network,
+  ...compute,
+  ...data,
+  ...delivery,
+  ...operations,
+  ...agents,
+  ...knowledge,
+  ...governance,
+};
+export type ArtName = keyof typeof objects;
 export const Art = React.memo(function Art({ name }: { name: ArtName }) {
   return (
     <svg
