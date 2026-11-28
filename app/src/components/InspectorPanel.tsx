@@ -10,8 +10,13 @@ import {
   ExternalLink,
   FlaskConical,
   HelpCircle,
+  Layers,
+  Mic,
   Microscope,
+  PenTool,
+  ShieldAlert,
   Sparkles,
+  Terminal,
 } from 'lucide-react';
 import type { InspectorTabId, LessonData, LessonId, StepInsight } from '../types';
 import { getGlossaryTermsForLesson } from '../data/glossary';
@@ -26,8 +31,8 @@ interface InspectorPanelProps {
   stepInsight: StepInsight;
   selectedChoiceId: string | null;
   onSelectQuizChoice: (choiceId: string, isCorrect: boolean) => void;
-  predictionText: string;
-  onChangePrediction: (value: string) => void;
+  predictions: Record<string, string>;
+  onChangePrediction: (key: string, value: string) => void;
   onOpenGlossary: (termId?: string) => void;
   onSelectLesson: (id: LessonId) => void;
 }
@@ -46,13 +51,13 @@ export function InspectorPanel({
   stepInsight,
   selectedChoiceId,
   onSelectQuizChoice,
-  predictionText,
+  predictions,
   onChangePrediction,
   onOpenGlossary,
   onSelectLesson,
 }: InspectorPanelProps) {
   const [miniOpen, setMiniOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const lessonTerms = getGlossaryTermsForLesson(lesson.id);
 
@@ -72,12 +77,13 @@ export function InspectorPanel({
     }
   };
 
-  const handleCopyJson = async () => {
-    if (!stepInsight.payloadJson) return;
+  const handleCopyText = async (key: string, text: string) => {
     try {
-      await navigator.clipboard.writeText(stepInsight.payloadJson);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      window.setTimeout(() => {
+        setCopiedKey((prev) => (prev === key ? null : prev));
+      }, 1600);
     } catch {
       // ignore clipboard denial in insecure contexts
     }
@@ -155,7 +161,9 @@ export function InspectorPanel({
                   <dt>{pair.label}</dt>
                   <dd>
                     {pair.tone ? (
-                      <span className={`status-chip ${pair.tone}`}>{pair.value}</span>
+                      <span className={`status-chip ${pair.tone}`}>
+                        <RichText text={pair.value} />
+                      </span>
                     ) : (
                       <BreakableIdentifier text={pair.value} />
                     )}
@@ -168,8 +176,12 @@ export function InspectorPanel({
               <div className="code-inspector">
                 <div className="code-inspector-head">
                   <span>{stepInsight.payloadTitle ?? 'イベント詳細（JSON）'}</span>
-                  <button type="button" className="copy-btn" onClick={handleCopyJson}>
-                    {copied ? (
+                  <button
+                    type="button"
+                    className="copy-btn"
+                    onClick={() => handleCopyText('payload-json', stepInsight.payloadJson!)}
+                  >
+                    {copiedKey === 'payload-json' ? (
                       <>
                         <Check size={13} aria-hidden="true" />
                         コピー済
@@ -342,7 +354,7 @@ export function InspectorPanel({
           </div>
         </div>
 
-        {/* Panel 4: MacBook Lab Prediction */}
+        {/* Panel 4: Lab Retention Loop (4-Step for Week 2+, Single Prediction for Week 0-1) */}
         <div
           role="tabpanel"
           aria-labelledby="inspector-tab-lab"
@@ -350,25 +362,198 @@ export function InspectorPanel({
           tabIndex={activeTab === 'lab' ? 0 : undefined}
         >
           <div className="tabpanel-inner">
-            <p className="panel-kicker">MacBook ラボ前の予測メモ</p>
-            <h2 className="panel-title">手を動かす前に予測を書く</h2>
-            <p className="panel-lead">
-              MacBook で演習を実行する前に、挙動の予測を自分の言葉でメモしておくと、実際の観測とのズレが最も記憶に残ります。
-            </p>
+            {lesson.labGuide ? (
+              <div className="lab-loop-stack">
+                <div>
+                  <p className="panel-kicker">4 ステップ定着ループ（サンドボックス継続）</p>
+                  <h2 className="panel-title">{lesson.labGuide.title}</h2>
+                  <p className="panel-lead">
+                    <RichText text={lesson.labGuide.sandboxSummary} />
+                  </p>
+                </div>
 
-            <label htmlFor={`prediction-${lesson.id}`} className="prediction-label">
-              予測のお題：{lesson.labPredictionPrompt}
-            </label>
-            <textarea
-              id={`prediction-${lesson.id}`}
-              className="prediction-textarea"
-              value={predictionText}
-              onChange={(e) => onChangePrediction(e.target.value)}
-              placeholder="例：入口の Invoker を外すと、Cloud Run のフロント層で 403 になり、コンテナ内のアプリコードには到達しないはず…"
-            />
-            <p className="anki-meta">
-              ※入力内容はこの端末のブラウザに自動保存されます。実習後はリポジトリの PROGRESS.md へ観測結果を記録します。
-            </p>
+                {/* Step 1: 3 Pre-Lab Predictions */}
+                <section className="lab-step-card" aria-labelledby={`lab-step1-${lesson.id}`}>
+                  <div className="lab-step-head">
+                    <span className="lab-step-badge" aria-hidden="true">1</span>
+                    <h3 id={`lab-step1-${lesson.id}`} className="lab-step-title">
+                      事前予測（3 問）— 手を動かす前に一言メモ
+                    </h3>
+                  </div>
+
+                  <div className="lab-pred-list">
+                    {lesson.labGuide.predictions.map((pred) => {
+                      const storageKey = `${lesson.id}:${pred.id}`;
+                      return (
+                        <div key={pred.id} className="lab-pred-item">
+                          <label htmlFor={`pred-${storageKey}`} className="prediction-label">
+                            <RichText text={pred.question} />
+                          </label>
+                          <textarea
+                            id={`pred-${storageKey}`}
+                            className="prediction-textarea prediction-textarea--compact"
+                            value={predictions[storageKey] ?? ''}
+                            onChange={(e) => onChangePrediction(storageKey, e.target.value)}
+                            placeholder={pred.placeholder}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="anki-meta">
+                    ※入力はこの端末のブラウザへ自動保存されます。実測後に予想との差分を確認します。
+                  </p>
+                </section>
+
+                {/* Step 2: Hand Drawing & AI Review */}
+                <section className="lab-step-card" aria-labelledby={`lab-step2-${lesson.id}`}>
+                  <div className="lab-step-head">
+                    <span className="lab-step-badge" aria-hidden="true">2</span>
+                    <h3 id={`lab-step2-${lesson.id}`} className="lab-step-title">
+                      <PenTool size={14} aria-hidden="true" />
+                      手書き作図 ＆ AI 添削
+                    </h3>
+                  </div>
+                  <p className="lab-step-body">
+                    <RichText text={lesson.labGuide.handDrawTheme} />
+                  </p>
+                  <ul className="lab-checklist" role="list">
+                    {lesson.labGuide.handDrawChecklist.map((point) => (
+                      <li key={point}>
+                        <RichText text={point} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                {/* Step 3: Minimal Commands on Existing week01-manual-api */}
+                <section className="lab-step-card" aria-labelledby={`lab-step3-${lesson.id}`}>
+                  <div className="lab-step-head">
+                    <span className="lab-step-badge" aria-hidden="true">3</span>
+                    <h3 id={`lab-step3-${lesson.id}`} className="lab-step-title">
+                      <Terminal size={14} aria-hidden="true" />
+                      既存 week01-manual-api での最小実測
+                    </h3>
+                  </div>
+
+                  <div className="lab-command-list">
+                    {lesson.labGuide.minimalCommands.map((cmd, idx) => {
+                      const copyId = `cmd-${lesson.id}-${idx}`;
+                      return (
+                        <div key={cmd.title} className="lab-command-card">
+                          <strong className="lab-command-title">{cmd.title}</strong>
+                          <p className="lab-command-purpose">
+                            <RichText text={cmd.purpose} />
+                          </p>
+                          <div className="code-inspector">
+                            <div className="code-inspector-head">
+                              <span>gcloud コマンド</span>
+                              <button
+                                type="button"
+                                className="copy-btn"
+                                onClick={() => handleCopyText(copyId, cmd.command)}
+                              >
+                                {copiedKey === copyId ? (
+                                  <>
+                                    <Check size={13} aria-hidden="true" />
+                                    コピー済
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy size={13} aria-hidden="true" />
+                                    コピー
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <pre>{cmd.command}</pre>
+                          </div>
+                          <p className="lab-command-observe">
+                            <strong>観測：</strong>
+                            <RichText text={cmd.observe} />
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Step 4: Voice Explanation & Logging */}
+                <section className="lab-step-card" aria-labelledby={`lab-step4-${lesson.id}`}>
+                  <div className="lab-step-head">
+                    <span className="lab-step-badge" aria-hidden="true">4</span>
+                    <h3 id={`lab-step4-${lesson.id}`} className="lab-step-title">
+                      <Mic size={14} aria-hidden="true" />
+                      メモなし音声説明 ＆ 記録
+                    </h3>
+                  </div>
+                  <ul className="lab-checklist" role="list">
+                    {lesson.labGuide.voiceExplainPrompts.map((prompt) => (
+                      <li key={prompt}>
+                        <RichText text={prompt} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                {/* Hidden Actors & 3-Tier Settings Hierarchy */}
+                <section className="lab-hidden-box" aria-labelledby={`lab-hidden-${lesson.id}`}>
+                  <h3 id={`lab-hidden-${lesson.id}`} className="lab-hidden-title">
+                    <ShieldAlert size={15} aria-hidden="true" />
+                    {lesson.labGuide.hiddenActorsTitle}
+                  </h3>
+                  <dl className="lab-hidden-list">
+                    {lesson.labGuide.hiddenActors.map((actor) => (
+                      <div key={actor.label} className="lab-hidden-row">
+                        <dt>{actor.label}</dt>
+                        <dd>
+                          <RichText text={actor.detail} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+
+                <section className="lab-hidden-box is-hierarchy" aria-labelledby={`lab-tiers-${lesson.id}`}>
+                  <h3 id={`lab-tiers-${lesson.id}`} className="lab-hidden-title">
+                    <Layers size={15} aria-hidden="true" />
+                    {lesson.labGuide.hierarchyLevelsTitle}
+                  </h3>
+                  <dl className="lab-hidden-list">
+                    {lesson.labGuide.hierarchyLevels.map((tier) => (
+                      <div key={tier.label} className="lab-hidden-row">
+                        <dt>{tier.label}</dt>
+                        <dd>
+                          <RichText text={tier.detail} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              </div>
+            ) : (
+              <>
+                <p className="panel-kicker">MacBook ラボ前の予測メモ</p>
+                <h2 className="panel-title">手を動かす前に予測を書く</h2>
+                <p className="panel-lead">
+                  MacBook で演習を実行する前に、挙動の予測を自分の言葉でメモしておくと、実際の観測とのズレが最も記憶に残ります。
+                </p>
+
+                <label htmlFor={`prediction-${lesson.id}`} className="prediction-label">
+                  予測のお題：{lesson.labPredictionPrompt}
+                </label>
+                <textarea
+                  id={`prediction-${lesson.id}`}
+                  className="prediction-textarea"
+                  value={predictions[lesson.id] ?? ''}
+                  onChange={(e) => onChangePrediction(lesson.id, e.target.value)}
+                  placeholder="例：入口の Invoker を外すと、Cloud Run のフロント層で 403 になり、コンテナ内のアプリコードには到達しないはず…"
+                />
+                <p className="anki-meta">
+                  ※入力内容はこの端末のブラウザに自動保存されます。実習後はリポジトリの PROGRESS.md へ観測結果を記録します。
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

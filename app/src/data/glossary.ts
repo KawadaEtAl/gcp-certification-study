@@ -6,6 +6,7 @@ export const GLOSSARY_CATEGORY_LABELS: Record<GlossaryCategoryId, string> = {
   'w01-p2': 'Part 2・認証',
   'w01-p3': 'Part 3・階層',
   'w01-p4': 'Part 4・予算',
+  w02: '第2週・Run/AR',
   overview: '全体像',
 };
 
@@ -491,6 +492,162 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     relatedIds: ['billing-budget', 'sync-vs-async'],
   },
 
+  // 第2週：Cloud Run（サービス/ジョブ・リビジョン・スケール）＆ Artifact Registry
+  {
+    id: 'cloud-run-service-vs-job',
+    term: 'Cloud Run サービス と ジョブ',
+    subtitle: 'Cloud Run Service (HTTP) vs Cloud Run Job (Batch)',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p1'],
+    aliases: ['サービス', 'ジョブ', 'バッチ', 'Execution', 'Task'],
+    summary:
+      'サービスは HTTP リクエストを待ち受けて応答する常駐型、ジョブは起動したら処理を実行して完了時に終了するバッチ完結型。',
+    analogy: 'サービス＝窓口で常時お客さんを待つ受付、ジョブ＝夜間に倉庫の棚卸しを終えたら帰る作業班。',
+    examPoint:
+      '「HTTP 応答が必要・Web API」ならサービス、「定期バッチ・大量ファイル変換・DB マイグレーション・タスク並列処理」ならジョブを選ぶ。',
+    relatedIds: ['cloud-run', 'revision', 'concurrency'],
+  },
+  {
+    id: 'revision',
+    term: 'リビジョン（不変スナップショット）',
+    subtitle: 'Cloud Run Revision (Immutable)',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p2', 'w02-p3'],
+    aliases: ['不変', 'イミュータブル', 'スナップショット', '版'],
+    summary:
+      'Cloud Run サービスをデプロイするたびに作られる、「コンテナイメージ＋環境変数＋スケール設定＋実行時 SA」の固定された 1 時点の版。',
+    analogy: '印刷が終わって製本された「第1版・第2版の本」。後から中身を書き換えるのではなく、修正したら新しい版を発行する。',
+    examPoint:
+      'リビジョンは不変（Immutable）なため、新リビジョンに不具合が出ても再ビルドなしで旧リビジョンへ即座にトラフィックを戻せる。',
+    relatedIds: ['traffic-split', 'rollback', 'tag-vs-digest'],
+  },
+  {
+    id: 'traffic-split',
+    term: 'トラフィック分割・カナリアリリース',
+    subtitle: 'Traffic Splitting / Canary Release',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p2'],
+    aliases: ['カナリア', '段階切替', '段階リリース', '0%デプロイ', 'リビジョンタグ'],
+    summary:
+      '同じサービスの本番 URL に届くリクエストを、`v1: 90% / v2: 10%` のように複数リビジョンへ割合で振り分ける仕組み。',
+    analogy: '新メニューをいきなり全席に出さず、まず 10% のテーブルで味見してもらってから全体に広げる進め方。',
+    examPoint:
+      '`--no-traffic --tag v2` で本番 0% のまま専用タグ URL で事前検証 → 10% → 50% → 100% と段階的に切り替えるのが安全なリリース手順。',
+    relatedIds: ['revision', 'rollback', 'startup-probe'],
+  },
+  {
+    id: 'rollback',
+    term: '即時ロールバック（切り戻し）',
+    subtitle: 'Instant Traffic Rollback',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p2'],
+    aliases: ['切り戻し', 'ロールバック', '復旧'],
+    summary:
+      '新リビジョンでエラーや遅延が起きた際、トラフィック配分を安定していた旧リビジョンへ 100% 戻して数秒で復旧させる操作。',
+    analogy: '新バージョンのレジが不調なとき、作り直さず隣の旧レジへお客さんの列をすぐ誘導する切り替え。',
+    examPoint:
+      'コンテナの再ビルドや再デプロイが不要なため復旧が最速。ただし後方互換性のない DB スキーマ破壊だけはトラフィック戻しで直せない点に注意。',
+    relatedIds: ['revision', 'traffic-split'],
+  },
+  {
+    id: 'startup-probe',
+    term: 'Startup Probe と Ready 状態',
+    subtitle: 'Startup Probe / Liveness Probe / Ready',
+    category: 'w02',
+    lessons: ['w02-p2', 'w02-p3'],
+    aliases: ['ヘルスチェック', 'Ready', '起動確認', 'プローブ'],
+    summary:
+      'コンテナがポートを開いてリクエストを受け取れる状態（Ready）になったかを判定する仕組み。未達の間はトラフィックが流れない。',
+    analogy: '開店準備（レジ起動・商品陳列）が終わって「営業中」の札が掛かるまでお客さんを通さない仕組み。',
+    examPoint:
+      '「デプロイ・起動（Ready）」「入口認証（Invoker）」「トラフィック割当」は別段階。アプリ起動失敗は Ready にならず新リビジョン作成自体が止まる。',
+    relatedIds: ['revision', 'cold-start', 'run-invoker'],
+  },
+  {
+    id: 'concurrency',
+    term: '同時実行数（Concurrency）',
+    subtitle: 'Max Concurrent Requests per Instance',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p3'],
+    aliases: ['同時実行', 'インスタンス', '並列処理'],
+    summary:
+      '1 台の Cloud Run コンテナインスタンスが同時に処理できる HTTP リクエスト数の上限（デフォルト 80、最大 1000）。',
+    analogy: 'カフェ店員 1 人が同時にさばける注文数。1 人で 80 件さばけるなら店員を増やさずに済む。',
+    examPoint:
+      '必要インスタンス数の目安は「同時リクエスト数 ÷ Concurrency」。CPU 重め・スレッド非安全なら 1〜低めに下げ、I/O 中心なら高めに保つ。',
+    relatedIds: ['cold-start', 'max-instances', 'min-instances'],
+  },
+  {
+    id: 'cold-start',
+    term: 'コールドスタート',
+    subtitle: 'Cold Start Latency',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p3'],
+    aliases: ['初回遅延', 'ゼロスケール', 'ウォーム起動'],
+    summary:
+      '稼働インスタンスが 0 台の状態から最初のリクエストが来たとき、新規コンテナの起動・アプリ初期化のぶんだけ初回応答が遅くなる現象。',
+    analogy: 'シャッターを閉めていたお店を、1 人目のお客さんが来てから鍵を開けて電気を点けて迎えるまでの待ち時間。',
+    examPoint:
+      '対策は ① イメージ軽量化・初期化削減、② 最小インスタンス数（`min-instances >= 1`）で常時待機、③ 起動時 CPU ブースト（Startup CPU Boost）。',
+    relatedIds: ['min-instances', 'concurrency', 'startup-probe'],
+  },
+  {
+    id: 'min-instances',
+    term: '最小インスタンス数（min-instances）',
+    subtitle: 'Minimum Instances (Warm Idle)',
+    category: 'w02',
+    lessons: ['w02-p3'],
+    aliases: ['最小インスタンス', 'アイドル課金', 'ウォーム待機'],
+    summary:
+      'リクエストがゼロのときでも常時起動して待機させておくコンテナインスタンス数。デフォルトは 0（スケール・トゥ・ゼロ）。',
+    analogy: 'お客さんがいなくても常に店員を 1 人待機させておく設定。待ち時間は減るが人件費（アイドル料金）が掛かる。',
+    examPoint:
+      'コールドスタートを抑える代わりに、リクエストがない時間帯もアイドル課金が発生する。「遅延要件 vs コスト」の典型的なトレードオフ。',
+    relatedIds: ['cold-start', 'max-instances', 'concurrency'],
+  },
+  {
+    id: 'artifact-registry',
+    term: 'Artifact Registry',
+    subtitle: 'マネージド コンテナ＆パッケージ保管庫',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p4'],
+    aliases: ['AR', 'レジストリ', 'GCR', 'Container Registry', 'イメージ倉庫'],
+    summary:
+      'Docker コンテナイメージや言語パッケージ（Python / npm / Maven 等）をリージョン単位で安全に保管・IAM 管理する公式リポジトリ。',
+    analogy: 'ビルド済みの完成品（コンテナ箱）に検査印と固有番号を付けて保管する「地域別の品質管理倉庫」。',
+    examPoint:
+      '旧 Container Registry（GCR）の後継。リポジトリ単位の細かい IAM、リージョン配置（Cloud Run と同リージョンで高速・低転送費）、脆弱性スキャン、クリーンアップポリシーが決め手。',
+    relatedIds: ['tag-vs-digest', 'container', 'cloud-run-service-agent'],
+  },
+  {
+    id: 'tag-vs-digest',
+    term: 'タグ（:latest）と ダイジェスト（@sha256:...）',
+    subtitle: 'Mutable Tag vs Immutable Image Digest',
+    category: 'w02',
+    lessons: ['w02-p0', 'w02-p4'],
+    aliases: ['ダイジェスト', 'sha256', 'latest', '再現性'],
+    summary:
+      'タグ（例：`:v2` `:latest`）は人間が貼り替えられる付箋、ダイジェスト（`@sha256:...`）は中身から計算される改ざん不能な固有指紋。',
+    analogy: 'タグ＝棚に貼る「おすすめ」付箋（貼り替え可能）、ダイジェスト＝中身そのものの DNA 指紋（絶対に変わらない）。',
+    examPoint:
+      '`:latest` で再デプロイすると昨日と別の中身が動き再現性が壊れる。本番デプロイや切り戻しでは必ずダイジェスト固定（`@sha256:...`）を使う。',
+    relatedIds: ['artifact-registry', 'revision', 'rollback'],
+  },
+  {
+    id: 'cloud-run-service-agent',
+    term: 'Cloud Run サービスエージェント / ビルド用 SA',
+    subtitle: 'Google-managed Service Agent & Cloud Build SA',
+    category: 'w02',
+    lessons: ['w02-p4'],
+    aliases: ['サービスエージェント', 'ビルド用SA', '裏の登場人物', 'serverless-robot-prod'],
+    summary:
+      'デプロイ裏側でコンテナをビルドする「Cloud Build 用 SA」と、Artifact Registry からイメージを pull する「Cloud Run サービスエージェント」。',
+    analogy: '店員（実行時 SA）とは別に、工場で箱を詰める職人（ビルド SA）と倉庫から店へ運ぶ配送員（サービスエージェント）がいる構造。',
+    examPoint:
+      '別プロジェクトの Artifact Registry からイメージを pull する際、権限が必要なのは実行時 SA ではなく「Cloud Run サービスエージェント」である点が超頻出ひっかけ。',
+    relatedIds: ['artifact-registry', 'runtime-sa', 'act-as'],
+  },
+
   // 全体像（Week 0・ロードマップ）
   {
     id: 'pca-paa',
@@ -573,6 +730,11 @@ export const LESSON_KEY_TERM_IDS: Record<LessonId, string[]> = {
   'w01-p2': ['ci-cd', 'oidc-token', 'sa-json-key', 'adc', 'wif', 'metadata-server', 'id-vs-oauth-token', 'sts', 'impersonation'],
   'w01-p3': ['resource-hierarchy', 'allow-inheritance', 'secret-manager', 'iam-deny', 'least-privilege', 'runtime-sa'],
   'w01-p4': ['billing-budget', 'quotas', 'max-instances', 'sync-vs-async', 'pubsub'],
+  'w02-p0': ['container', 'artifact-registry', 'tag-vs-digest', 'revision', 'concurrency', 'cold-start', 'traffic-split', 'cloud-run-service-vs-job'],
+  'w02-p1': ['cloud-run-service-vs-job', 'cloud-run', 'runtime-sa', 'container', 'sync-vs-async'],
+  'w02-p2': ['revision', 'traffic-split', 'rollback', 'startup-probe', 'run-invoker', 'tag-vs-digest'],
+  'w02-p3': ['concurrency', 'cold-start', 'min-instances', 'max-instances', 'quotas', 'startup-probe'],
+  'w02-p4': ['artifact-registry', 'tag-vs-digest', 'cloud-run-service-agent', 'container', 'ci-cd', 'runtime-sa'],
 };
 
 export function getGlossaryTermById(id: string): GlossaryTerm | undefined {

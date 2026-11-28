@@ -1350,8 +1350,9 @@ a {
 }
 
 .kv-list .status-chip {
+  display: inline-block;
   white-space: normal;
-  line-height: 1.35;
+  line-height: 1.45;
 }
 
 /* JSON Code Inspector (pre-wrap so nothing clips + Copy button) */
@@ -3040,5 +3041,840 @@ a {
   .next-story-card .btn-play {
     width: 100%;
     min-block-size: 44px;
+  }
+}
+
+/* ==========================================================================
+   Week 0 Static Skeleton Diagrams & IAM 3 Principles
+   ========================================================================== */
+
+.skeleton-hint {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  word-break: auto-phrase;
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-section {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.skeleton-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem 0.6rem;
+  background: var(--bg-surface);
+}
+
+.skeleton-num-badge,
+.principle-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 50%;
+  background: var(--selected-bg);
+  color: var(--selected-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 0.08rem;
+}
+
+.skeleton-section-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-primary);
+  word-break: auto-phrase;
+}
+
+.skeleton-section-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  word-break: auto-phrase;
+}
+
+.skeleton-stage {
+  background-image: none;
+  background-color: var(--bg-surface);
+  padding: 0.35rem 0.85rem 0.85rem;
+}
+
+.skeleton-principles {
+  padding: 0.95rem;
+  background: var(--bg-canvas);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.skeleton-principles-head {
+  margin-bottom: 0.75rem;
+}
+
+.principles-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.principle-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.principle-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-primary);
+  word-break: auto-phrase;
+}
+
+.principle-detail {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  word-break: auto-phrase;
+}
+
+@media (max-width: 679px) {
+  .skeleton-hint {
+    font-size: 0.8rem;
+  }
+
+  .skeleton-section-head {
+    padding: 0.75rem 0.75rem 0.5rem;
+  }
+
+  .skeleton-section-title {
+    font-size: 0.98rem;
+  }
+
+  .skeleton-section-sub,
+  .principle-detail {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .principle-title {
+    font-size: 0.94rem;
+  }
+
+  .skeleton-stage {
+    padding: 0.2rem 0.35rem 0.75rem;
+  }
+
+  .skeleton-principles {
+    padding: 0.85rem 0.75rem;
+  }
+
+  .principles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+   Week 2: Sidebar Week Accordion, Prereq 7 Words, Responsive Tables,
+           Modern Range Sliders, Traffic/Scaling Controls, & 4-Step Lab Loop
+   ========================================================================== */
+
+/* Sidebar Collapsible Week Groups (non-exclusive <details> accordion) */
+.sidebar-week-group {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-week-summary {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.72rem 0.85rem 0.45rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 140ms ease;
+}
+
+.sidebar-week-summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-week-summary:hover {
+  background: var(--bg-canvas);
+}
+
+.sidebar-week-chevron {
+  flex: none;
+  margin-top: 0.12rem;
+  color: var(--ink-muted);
+  rotate: -90deg;
+}
+
+.sidebar-week-group[open] > .sidebar-week-summary .sidebar-week-chevron {
+  rotate: 0deg;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar-week-chevron {
+    transition: rotate 0.2s ease;
+  }
+}
+
+.sidebar-week-summary-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar-week-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  line-height: 1.3;
+  word-break: auto-phrase;
+}
+
+.sidebar-week-group::details-content {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+}
+
+.sidebar-week-group:not([open])::details-content {
+  block-size: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar-week-group::details-content {
+    transition: block-size 0.24s ease-in-out, content-visibility 0.24s ease-in-out;
+    transition-behavior: allow-discrete;
+  }
+}
+
+.roadmap-summary {
+  justify-content: flex-start;
+}
+
+.roadmap-chevron {
+  flex: none;
+  rotate: -90deg;
+}
+
+.roadmap-details[open] .roadmap-chevron {
+  transform: none;
+  rotate: 0deg;
+}
+
+/* Part 0: Prerequisite 7-Word Grid */
+.prereq-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.prereq-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.78rem 0.85rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.prereq-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.prereq-title-wrap {
+  min-width: 0;
+}
+
+.prereq-sub {
+  display: block;
+  font-size: 0.71rem;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.prereq-analogy {
+  margin: 0;
+  padding: 0.42rem 0.58rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+.prereq-glossary-link {
+  margin-top: auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--accent-blue);
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.prereq-glossary-link:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-blue);
+}
+
+/* Semantic Responsive Comparison Table (Container-Query Stacked Layout) */
+.responsive-table-wrap {
+  overflow: auto;
+  max-inline-size: 100%;
+  container-type: inline-size;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.comparison-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+}
+
+.comparison-table thead th {
+  padding: 0.6rem 0.75rem;
+  background: #f8fafd;
+  color: var(--ink-primary);
+  font-size: 0.78rem;
+  font-weight: 650;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.comparison-table tbody th,
+.comparison-table tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+  color: var(--ink-secondary);
+}
+
+.comparison-table tbody tr:last-child th,
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.comparison-table tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  background: var(--bg-surface);
+  color: var(--ink-primary);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.comparison-table--svc-job {
+  --label-2: "Cloud Run サービス";
+  --label-3: "Cloud Run ジョブ";
+}
+
+.comparison-table--tiers {
+  --label-2: "効く範囲";
+  --label-3: "代表的な設定項目";
+  --label-4: "変更時の挙動";
+}
+
+@container (width < 520px) {
+  .responsive-table-wrap {
+    border: none;
+    background: transparent;
+  }
+
+  .comparison-table,
+  .comparison-table thead,
+  .comparison-table tbody,
+  .comparison-table tr,
+  .comparison-table th,
+  .comparison-table td {
+    display: block;
+  }
+
+  .comparison-table thead {
+    display: none;
+  }
+
+  .comparison-table tbody tr {
+    margin-block-end: 0.65rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    overflow: hidden;
+  }
+
+  .comparison-table tbody tr:last-child {
+    margin-block-end: 0;
+  }
+
+  .comparison-table tbody th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: #f8fafd;
+    white-space: normal;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .comparison-table tbody td {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.88rem;
+  }
+
+  .comparison-table tbody td:nth-child(2)::before {
+    content: var(--label-2);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+
+  .comparison-table tbody td:nth-child(3)::before {
+    content: var(--label-3);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--accent-indigo);
+  }
+
+  .comparison-table tbody td:nth-child(4)::before {
+    content: var(--label-4);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--accent-emerald);
+  }
+}
+
+/* Modern Brand-Consistent Range Slider (progress() with calc() fallback) */
+.modern-range {
+  --slider-track-size: 0.45rem;
+  --slider-thumb-size: 1.2rem;
+  --slider-track-radius: 999px;
+  --slider-thumb-radius: 50%;
+  --slider-track-color: #d7dfec;
+  --slider-fill-color: var(--accent-blue);
+  --slider-thumb-color: var(--accent-blue);
+  --slider-progress: calc(
+    progress(var(--control-value), var(--attr-min), var(--attr-max)) * 100%
+  );
+
+  appearance: none;
+  inline-size: 100%;
+  block-size: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@supports not (opacity: progress(1, 0, 100)) {
+  .modern-range {
+    --slider-progress: calc(
+      (var(--control-value) - var(--attr-min)) /
+      (var(--attr-max) - var(--attr-min)) * 100%
+    );
+  }
+}
+
+.modern-range::-webkit-slider-runnable-track {
+  block-size: var(--slider-track-size);
+  border: 0;
+  border-radius: var(--slider-track-radius);
+  background: linear-gradient(
+    to right,
+    var(--slider-fill-color) var(--slider-progress),
+    var(--slider-track-color) var(--slider-progress)
+  );
+}
+
+.modern-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  inline-size: var(--slider-thumb-size);
+  block-size: var(--slider-thumb-size);
+  margin-block-start: calc((var(--slider-track-size) - var(--slider-thumb-size)) / 2);
+  border: 2px solid #ffffff;
+  border-radius: var(--slider-thumb-radius);
+  background: var(--slider-thumb-color);
+  box-shadow: 0 1px 4px rgba(15, 27, 51, 0.25);
+}
+
+.modern-range::-moz-range-track {
+  block-size: var(--slider-track-size);
+  border: 0;
+  border-radius: var(--slider-track-radius);
+  background: var(--slider-track-color);
+}
+
+.modern-range::-moz-range-progress {
+  block-size: var(--slider-track-size);
+  border-radius: var(--slider-track-radius);
+  background: var(--slider-fill-color);
+}
+
+.modern-range::-moz-range-thumb {
+  inline-size: var(--slider-thumb-size);
+  block-size: var(--slider-thumb-size);
+  border: 2px solid #ffffff;
+  border-radius: var(--slider-thumb-radius);
+  background: var(--slider-thumb-color);
+}
+
+.modern-range:focus-visible {
+  outline: 2.5px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Part 2: Traffic Split Control Strip */
+.traffic-control-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 0.9rem;
+  padding: 0.55rem 0.85rem;
+  background: #f8fafd;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.traffic-slider-wrap {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.traffic-slider-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  flex: none;
+}
+
+.traffic-readout {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  flex: none;
+}
+
+.rollback-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-block-size: 36px;
+  padding: 0.28rem 0.78rem;
+  border: 1px solid #f28b82;
+  border-radius: var(--radius-pill);
+  background: var(--accent-crimson-soft);
+  color: var(--accent-crimson);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rollback-action-btn:hover {
+  background: #fad2cf;
+  border-color: var(--accent-crimson);
+}
+
+/* Part 3: Scaling Controls Panel */
+.scaling-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  background: #f8fafd;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.scaling-slider-card {
+  padding: 0.5rem 0.7rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.scaling-slider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.scaling-val {
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+.scaling-toggle-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 1rem;
+}
+
+.scaling-seg-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+/* Panel 4: 4-Step Lab Retention Loop */
+.lab-loop-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.lab-step-card {
+  padding: 0.85rem 0.9rem;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.lab-step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lab-step-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.lab-step-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--ink-primary);
+  line-height: 1.35;
+}
+
+.lab-step-body {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--ink-secondary);
+}
+
+.lab-pred-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lab-pred-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.prediction-textarea--compact {
+  min-block-size: 76px;
+  margin-top: 0.25rem;
+}
+
+.lab-checklist {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.83rem;
+  line-height: 1.58;
+  color: var(--ink-secondary);
+}
+
+.lab-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lab-command-card {
+  padding: 0.72rem 0.78rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.lab-command-title {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 650;
+  color: var(--ink-primary);
+  margin-bottom: 0.2rem;
+}
+
+.lab-command-purpose,
+.lab-command-observe {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+
+.lab-command-card .code-inspector {
+  margin-top: 0.45rem;
+}
+
+.lab-hidden-box {
+  padding: 0.85rem 0.9rem;
+  background: #fff8f7;
+  border: 1px solid #f6aea9;
+  border-radius: var(--radius-md);
+}
+
+.lab-hidden-box.is-hierarchy {
+  background: #f5f7ff;
+  border-color: #c7d2fe;
+}
+
+.lab-hidden-title {
+  margin: 0 0 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--accent-crimson);
+}
+
+.lab-hidden-box.is-hierarchy .lab-hidden-title {
+  color: var(--accent-indigo);
+}
+
+.lab-hidden-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lab-hidden-row {
+  padding: 0.55rem 0.65rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.lab-hidden-row dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-bottom: 0.15rem;
+}
+
+.lab-hidden-row dd {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 679px) {
+  .prereq-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .traffic-control-strip {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .traffic-slider-wrap {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+  }
+
+  .rollback-action-btn {
+    width: 100%;
+    justify-content: center;
+    min-block-size: 42px;
+  }
+
+  .scaling-controls-grid {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .lab-step-body,
+  .lab-checklist,
+  .lab-command-purpose,
+  .lab-command-observe,
+  .lab-hidden-row dd {
+    font-size: 0.92rem;
+    line-height: 1.62;
   }
 }

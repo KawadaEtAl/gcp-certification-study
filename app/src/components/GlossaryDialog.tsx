@@ -21,10 +21,11 @@ interface GlossaryDialogProps {
 
 const CATEGORY_FILTERS: { id: GlossaryCategoryId; label: string }[] = [
   { id: 'basics', label: '共通基礎' },
-  { id: 'w01-p1', label: 'Part 1' },
-  { id: 'w01-p2', label: 'Part 2' },
-  { id: 'w01-p3', label: 'Part 3' },
-  { id: 'w01-p4', label: 'Part 4' },
+  { id: 'w01-p1', label: 'W1・P1' },
+  { id: 'w01-p2', label: 'W1・P2' },
+  { id: 'w01-p3', label: 'W1・P3' },
+  { id: 'w01-p4', label: 'W1・P4' },
+  { id: 'w02', label: '第2週' },
   { id: 'overview', label: '全体像' },
 ];
 

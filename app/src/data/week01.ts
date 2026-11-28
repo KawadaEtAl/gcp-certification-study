@@ -5,9 +5,9 @@ export const WEEK00_LESSON: LessonData = {
   week: 0,
   part: 0,
   domain: '全体像',
-  shortTitle: 'GCP 全体像・学習インデックス',
-  title: 'Google Cloud 全体像と 24 週計画',
-  tagline: 'PCA → PAA で学ぶ 6 領域のつながりと、週次カリキュラムの現在地を一枚で俯瞰する',
+  shortTitle: 'GCP 全体地図・学習インデックス',
+  title: 'Google Cloud 全体地図と 24 週計画',
+  tagline: 'リソース階層・プリンシパル・物理配置の骨格図と IAM 3 原則、6 領域マップ、24 週計画を一枚で俯瞰する',
   story: {
     episodeLabel: 'プロローグ',
     hookTitle: '社内マニュアル回答アプリを立ち上げよ',
@@ -24,8 +24,8 @@ export const WEEK00_LESSON: LessonData = {
         '全体像を掴んだらいよいよ構築スタート。最初の壁は「誰に何の権限を付ければよいか？」です。',
     },
   },
-  visualTypeLabel: '6領域アーキテクチャマップ・全体目次',
-  estimatedMinutes: 4,
+  visualTypeLabel: 'GCP 骨格図・6領域マップ・全体目次',
+  estimatedMinutes: 5,
   examQuiz: {
     title: 'PCA 試験で最も問われる判断軸は？',
     scenario:
@@ -77,6 +77,15 @@ export const WEEK00_LESSON: LessonData = {
     },
   ],
   deepDiveParagraphs: [
+    {
+      heading: 'まず押さえる GCP の骨格：木構造 vs 木の外 vs 物理配置',
+      body: 'Google Cloud は「リソースの木構造（組織 → フォルダ → プロジェクト → 個別リソース）」と「木の外にいる人間（Google アカウント・グループ／Cloud Identity）」の 2 つに分けて捉えると一気に視界が開けます。\nGCS バケットも Cloud Run も必ずどれか 1 つのプロジェクトの中に生まれ、課金と API 有効化もプロジェクト単位で管理されます。一方、リージョン（例：`asia-northeast1`）やゾーン（`-a/-b/-c`）は「データが物理的に置かれる場所」という別の軸であり、1 つのプロジェクト内に東京と米国のリソースを混在させることもできます。',
+    },
+    {
+      heading: '全単元に共通する IAM の 3 原則（＋組織ポリシーの違い）',
+      body: '1. パーミッションは直接付けず「ロール」で束ねる：`storage.objects.get` のような細かい権限ではなく、`roles/storage.objectViewer` のような事前定義ロール単位で付与します。\n2. ポリシーはリソース側に付き、下へ「足し算」で継承される：組織やフォルダで許可した Allow は子で取り消せません。そのため上位に弱い権限（閲覧など）、下位に強い権限（編集など）を置くのが鉄則です。\n3. サービスアカウント（SA）は「リソース」兼「プリンシパル（ID）」：プロジェクト配下に属する箱でありつつ、アプリが他リソースを操作する主体にもなります。だから SA 自体に「誰がこの SA を使ってよいか（`actAs`）」を設定できます。',
+      callout: 'IAM は「誰に何を許すか（人の権限）」、組織ポリシーは「たとえ権限があっても配下全員に SA キー作成や外部公開を禁止する（ガードレール）」という役割分担です。',
+    },
     {
       heading: 'Google Cloud を 6 つのレイヤーで捉える',
       body: 'Google Cloud のサービスは膨大ですが、PCA の設計判断では「① 階層と IAM」「② ネットワーク」「③ 実行基盤」「④ データ保存・分析」「⑤ 運用・FinOps」「⑥ AI / Agent」の 6 層に整理すると一気に全体感が見えます。\n特に①のリソース階層と IAM はすべてのサービスに横断して効くため、第1週で最優先に固めます。',
@@ -559,9 +568,10 @@ export const WEEK01_LESSONS: LessonData[] = [
       challenge:
         '調べると「Cloud Billing の予算は通知が出るだけで、100% に達しても利用は止まらない」と判明。しかも課金集計には時間差（ラグ）があり、このままでは週末の暴走を防げない。',
       nextBridge: {
-        nextLabel: '第1週ストーリー完了 → 次は第2週（安全なリリースと切り戻し）へ',
+        nextLessonId: 'w02-p0',
+        nextLabel: '第2週 Part 0：Cloud Run リリース＆Artifact Registry の全体マップへ',
         teaser:
-          '安全に動かし始める 4 つの壁をすべて突破しました！第2週では、アプリを更新しても壊さず切り戻せるリビジョン設計へ進みます。',
+          '安全に動かし始める 4 つの壁をすべて突破しました！第2週では、既存の `week01-manual-api` を発展させ、壊さず更新・切り戻せるリビジョン設計とバッチ・スケール・イメージ管理へ進みます。',
       },
     },
     visualTypeLabel: 'リアルタイム課金曲線・非同期ラグ比較',
@@ -685,7 +695,7 @@ export const WEEK01_LESSONS: LessonData[] = [
 
 export const ROADMAP_PREVIEW: RoadmapPreviewWeek[] = [
   { week: 1, stage: '第1段階', title: 'IAM・Cloud Run・認証・予算', topics: '3主体IAM / ADC / WIF / Secret Manager / Budget', status: 'active' },
-  { week: 2, stage: '第1段階', title: 'Cloud Run リビジョンとリリース', topics: 'サービス/ジョブ / トラフィック分割 / Artifact Registry', status: 'upcoming' },
+  { week: 2, stage: '第1段階', title: 'Cloud Run リビジョンとリリース', topics: 'サービス/ジョブ / トラフィック分割 / スケール / Artifact Registry', status: 'active' },
   { week: 3, stage: '第1段階', title: 'Storage・Firestore・非同期処理', topics: '版管理 / Cloud Tasks 再試行 / 冪等性', status: 'upcoming' },
   { week: 4, stage: '第1段階', title: 'Cloud Build・Logging・Monitoring', topics: 'ビルド〜観測 / エラー切り分け / 切り戻し', status: 'upcoming' },
   { week: 5, stage: '第2段階', title: 'VPC・ルート・ファイアウォール', topics: 'サブネット / Cloud NAT / 公開入口 vs 送信経路', status: 'upcoming' },

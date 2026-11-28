@@ -1,4 +1,14 @@
-export type LessonId = 'w00-overview' | 'w01-p1' | 'w01-p2' | 'w01-p3' | 'w01-p4';
+export type LessonId =
+  | 'w00-overview'
+  | 'w01-p1'
+  | 'w01-p2'
+  | 'w01-p3'
+  | 'w01-p4'
+  | 'w02-p0'
+  | 'w02-p1'
+  | 'w02-p2'
+  | 'w02-p3'
+  | 'w02-p4';
 
 export type InspectorTabId = 'quiz' | 'step' | 'deepdive' | 'lab';
 
@@ -8,6 +18,7 @@ export type GlossaryCategoryId =
   | 'w01-p2'
   | 'w01-p3'
   | 'w01-p4'
+  | 'w02'
   | 'overview';
 
 export interface GlossaryTerm {
@@ -95,11 +106,53 @@ export interface LessonStory {
   nextBridge?: LessonStoryBridge;
 }
 
+export interface LabPredictionItem {
+  id: string;
+  question: string;
+  placeholder: string;
+}
+
+export interface LabCommandStep {
+  title: string;
+  purpose: string;
+  command: string;
+  observe: string;
+}
+
+export interface LabHiddenActorItem {
+  label: string;
+  detail: string;
+}
+
+export interface LabGuideData {
+  title: string;
+  sandboxSummary: string;
+  predictions: LabPredictionItem[];
+  handDrawTheme: string;
+  handDrawChecklist: string[];
+  minimalCommands: LabCommandStep[];
+  voiceExplainPrompts: string[];
+  hiddenActorsTitle: string;
+  hiddenActors: LabHiddenActorItem[];
+  hierarchyLevelsTitle: string;
+  hierarchyLevels: LabHiddenActorItem[];
+}
+
 export interface LessonData {
   id: LessonId;
   week: number;
   part: number;
-  domain: '全体像' | 'IAM' | 'Auth' | 'Hierarchy' | 'FinOps';
+  domain:
+    | '全体像'
+    | 'IAM'
+    | 'Auth'
+    | 'Hierarchy'
+    | 'FinOps'
+    | '全体マップ'
+    | '実行モデル'
+    | 'リリース'
+    | 'スケール'
+    | 'レジストリ';
   shortTitle: string;
   title: string;
   tagline: string;
@@ -115,6 +168,7 @@ export interface LessonData {
   consoleScreens?: ConsoleScreenRef[];
   ankiCardIds: string[];
   labPredictionPrompt: string;
+  labGuide?: LabGuideData;
 }
 
 export interface RoadmapPreviewWeek {

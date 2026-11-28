@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ROADMAP_PREVIEW, WEEK00_LESSON, WEEK01_LESSONS } from './data/week01';
+import { WEEK02_LESSONS } from './data/week02';
 import type { InspectorTabId, LessonId, StepInsight } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -11,6 +12,11 @@ import { Part1CloudRunViz } from './visualizers/Part1CloudRunViz';
 import { Part2KeylessAuthViz } from './visualizers/Part2KeylessAuthViz';
 import { Part3HierarchyViz } from './visualizers/Part3HierarchyViz';
 import { Part4BudgetQuotaViz } from './visualizers/Part4BudgetQuotaViz';
+import { Week02Part0OverviewViz } from './visualizers/Week02Part0OverviewViz';
+import { Week02Part1ServiceVsJobViz } from './visualizers/Week02Part1ServiceVsJobViz';
+import { Week02Part2RevisionTrafficViz } from './visualizers/Week02Part2RevisionTrafficViz';
+import { Week02Part3ScalingViz } from './visualizers/Week02Part3ScalingViz';
+import { Week02Part4ArtifactRegistryViz } from './visualizers/Week02Part4ArtifactRegistryViz';
 
 const STORAGE_KEY = 'gcp-pca-explorer-state-v1';
 
@@ -45,11 +51,25 @@ const DEFAULT_INSIGHT: StepInsight = {
   kvPairs: [],
 };
 
-const ALL_LESSONS = [WEEK00_LESSON, ...WEEK01_LESSONS];
+const ALL_LESSONS = [WEEK00_LESSON, ...WEEK01_LESSONS, ...WEEK02_LESSONS];
+const TRACKED_QUIZ_LESSONS = [
+  ...WEEK01_LESSONS,
+  ...WEEK02_LESSONS.filter((l) => l.part > 0),
+];
+
+function getInitialLessonId(): LessonId {
+  if (typeof window === 'undefined') return 'w00-overview';
+  const hash = window.location.hash.replace(/^#/, '');
+  const match = ALL_LESSONS.find((l) => l.id === hash);
+  return match ? match.id : 'w02-p0';
+}
 
 export function App() {
-  const [activeLessonId, setActiveLessonId] = useState<LessonId>('w00-overview');
-  const [inspectorTab, setInspectorTab] = useState<InspectorTabId>('step');
+  const [activeLessonId, setActiveLessonId] = useState<LessonId>(getInitialLessonId);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTabId>(() => {
+    const initId = getInitialLessonId();
+    return initId === 'w00-overview' || initId === 'w02-p0' ? 'step' : 'quiz';
+  });
   const [focusCanvas, setFocusCanvas] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
@@ -63,7 +83,7 @@ export function App() {
     document.title =
       activeLesson.week === 0
         ? 'Week 0: GCP 全体像・目次 | GCP Architecture Explorer'
-        : `Part ${activeLesson.part}: ${activeLesson.shortTitle} | GCP Architecture Explorer`;
+        : `W${activeLesson.week} Part ${activeLesson.part}: ${activeLesson.shortTitle} | GCP Architecture Explorer`;
   }, [activeLesson]);
 
   useEffect(() => {
@@ -74,17 +94,25 @@ export function App() {
     }
   }, [saved]);
 
-  const handleSelectLesson = (id: LessonId) => {
-    setActiveLessonId(id);
-    if (id === 'w00-overview') {
-      setInspectorTab('step');
-    } else {
-      setInspectorTab(saved.solved[id] ? 'step' : 'quiz');
-    }
-    const stage = document.getElementById('main-stage');
-    stage?.scrollTo({ top: 0, behavior: 'smooth' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handleSelectLesson = useCallback(
+    (id: LessonId) => {
+      setActiveLessonId(id);
+      if (id === 'w00-overview' || id === 'w02-p0') {
+        setInspectorTab('step');
+      } else {
+        setInspectorTab(saved.solved[id] ? 'step' : 'quiz');
+      }
+      try {
+        window.history.replaceState(null, '', `#${id}`);
+      } catch {
+        // ignore history restrictions
+      }
+      const stage = document.getElementById('main-stage');
+      stage?.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [saved.solved],
+  );
 
   const handleSelectQuizChoice = (choiceId: string, isCorrect: boolean) => {
     setSaved((prev) => ({
@@ -97,10 +125,10 @@ export function App() {
     }));
   };
 
-  const handleChangePrediction = (value: string) => {
+  const handleChangePrediction = (key: string, value: string) => {
     setSaved((prev) => ({
       ...prev,
-      predictions: { ...prev.predictions, [activeLesson.id]: value },
+      predictions: { ...prev.predictions, [key]: value },
     }));
   };
 
@@ -118,9 +146,11 @@ export function App() {
     setGlossaryTermId(null);
   }, []);
 
-  const solvedCount = WEEK01_LESSONS.filter((l) => saved.solved[l.id]).length;
+  const solvedCount = TRACKED_QUIZ_LESSONS.filter((l) => saved.solved[l.id]).length;
   const activeLessonBadge =
-    activeLesson.week === 0 ? 'Week 0' : `Part ${activeLesson.part}`;
+    activeLesson.week === 0
+      ? 'Week 0'
+      : `W${activeLesson.week} P${activeLesson.part}`;
 
   return (
     <div className="app-shell">
@@ -130,7 +160,7 @@ export function App() {
 
       <Header
         solvedCount={solvedCount}
-        totalCount={WEEK01_LESSONS.length}
+        totalCount={TRACKED_QUIZ_LESSONS.length}
         focusCanvas={focusCanvas}
         onToggleFocusCanvas={() => setFocusCanvas((prev) => !prev)}
         mobileMenuOpen={mobileMenuOpen}
@@ -141,7 +171,8 @@ export function App() {
       <div className={`workspace ${focusCanvas ? 'focus-canvas' : ''}`}>
         <Sidebar
           overviewLesson={WEEK00_LESSON}
-          lessons={WEEK01_LESSONS}
+          week1Lessons={WEEK01_LESSONS}
+          week2Lessons={WEEK02_LESSONS}
           roadmap={ROADMAP_PREVIEW}
           activeLessonId={activeLessonId}
           solvedIds={saved.solved}
@@ -160,17 +191,67 @@ export function App() {
             >
               W0 全体像
             </button>
-            {WEEK01_LESSONS.map((lesson) => (
-              <button
-                key={lesson.id}
-                type="button"
-                className="mobile-lesson-pill"
-                aria-current={lesson.id === activeLessonId ? 'page' : undefined}
-                onClick={() => handleSelectLesson(lesson.id)}
-              >
-                P{lesson.part} {lesson.shortTitle}
-              </button>
-            ))}
+
+            {activeLesson.week === 2 ? (
+              <>
+                <button
+                  type="button"
+                  className="mobile-lesson-pill"
+                  onClick={() => handleSelectLesson('w01-p1')}
+                >
+                  W1 へ
+                </button>
+                {WEEK02_LESSONS.map((lesson) => (
+                  <button
+                    key={lesson.id}
+                    type="button"
+                    className="mobile-lesson-pill"
+                    aria-current={lesson.id === activeLessonId ? 'page' : undefined}
+                    onClick={() => handleSelectLesson(lesson.id)}
+                  >
+                    P{lesson.part} {lesson.shortTitle}
+                  </button>
+                ))}
+              </>
+            ) : activeLesson.week === 1 ? (
+              <>
+                {WEEK01_LESSONS.map((lesson) => (
+                  <button
+                    key={lesson.id}
+                    type="button"
+                    className="mobile-lesson-pill"
+                    aria-current={lesson.id === activeLessonId ? 'page' : undefined}
+                    onClick={() => handleSelectLesson(lesson.id)}
+                  >
+                    P{lesson.part} {lesson.shortTitle}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="mobile-lesson-pill"
+                  onClick={() => handleSelectLesson('w02-p0')}
+                >
+                  W2 へ
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="mobile-lesson-pill"
+                  onClick={() => handleSelectLesson('w02-p0')}
+                >
+                  W2 リリース編
+                </button>
+                <button
+                  type="button"
+                  className="mobile-lesson-pill"
+                  onClick={() => handleSelectLesson('w01-p1')}
+                >
+                  W1 立ち上げ編
+                </button>
+              </>
+            )}
           </nav>
 
           <div className="stage-header">
@@ -179,7 +260,7 @@ export function App() {
                 <span className="kicker-tag">
                   {activeLesson.week === 0
                     ? 'Week 0・全体像とインデックス'
-                    : `第1週・Part ${activeLesson.part}（${activeLesson.domain}）`}
+                    : `第${activeLesson.week}週・Part ${activeLesson.part}（${activeLesson.domain}）`}
                 </span>
                 <span className="kicker-visual">{activeLesson.visualTypeLabel}</span>
               </div>
@@ -210,6 +291,25 @@ export function App() {
           {activeLessonId === 'w01-p4' && (
             <Part4BudgetQuotaViz onStepInsightChange={handleStepInsightChange} />
           )}
+          {activeLessonId === 'w02-p0' && (
+            <Week02Part0OverviewViz
+              onStepInsightChange={handleStepInsightChange}
+              onJumpToLesson={handleSelectLesson}
+              onOpenGlossary={handleOpenGlossary}
+            />
+          )}
+          {activeLessonId === 'w02-p1' && (
+            <Week02Part1ServiceVsJobViz onStepInsightChange={handleStepInsightChange} />
+          )}
+          {activeLessonId === 'w02-p2' && (
+            <Week02Part2RevisionTrafficViz onStepInsightChange={handleStepInsightChange} />
+          )}
+          {activeLessonId === 'w02-p3' && (
+            <Week02Part3ScalingViz onStepInsightChange={handleStepInsightChange} />
+          )}
+          {activeLessonId === 'w02-p4' && (
+            <Week02Part4ArtifactRegistryViz onStepInsightChange={handleStepInsightChange} />
+          )}
         </main>
 
         <InspectorPanel
@@ -219,7 +319,7 @@ export function App() {
           stepInsight={stepInsight}
           selectedChoiceId={saved.quizChoices[activeLesson.id] ?? null}
           onSelectQuizChoice={handleSelectQuizChoice}
-          predictionText={saved.predictions[activeLesson.id] ?? ''}
+          predictions={saved.predictions}
           onChangePrediction={handleChangePrediction}
           onOpenGlossary={handleOpenGlossary}
           onSelectLesson={handleSelectLesson}

@@ -1,0 +1,269 @@
+[
+  {
+    "id": "pca-w02-001",
+    "category": "設計即断",
+    "topic": "第2週 Cloud Run サービスとジョブ",
+    "question": "毎晩2時にCloud StorageのPDF 1,000件を20分かけて索引化するコンテナ処理があります。\nHTTP応答は不要で並列実行したい場合、何を選びますか？",
+    "answer": "Cloud Run ジョブを使い、Cloud Scheduler から定期起動する。",
+    "reason": "ジョブはHTTPポート待ち受け不要で、処理をやり切ってexit 0で終了します。複数タスクへの分割並列実行や最大24時間タイムアウトにも対応します。",
+    "flip_point": "クライアントへ即時にHTTP応答を返すAPIならCloud Runサービスを選びます。",
+    "source_ref": "app/#w02-p1",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::cloud-run",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Cloud Scheduler → Execution起動・Task並列 → Cloud Run ジョブ（exit 0終了）\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Cloud Scheduler（毎晩2時）</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Execution起動・Task並列</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">Cloud Run ジョブ（exit 0終了）</text></svg>"
+  },
+  {
+    "id": "pca-w02-002",
+    "category": "ひっかけ",
+    "topic": "第2週 Cloud Run サービスとジョブ",
+    "question": "Cloud Run サービスで「すぐ202 Acceptedを返し、裏スレッドで20分のバッチを回す」実装は安全ですか？",
+    "answer": "安全ではない。レスポンス返却後はCPUが絞られ、処理途中で停止・強制終了され得る。",
+    "reason": "デフォルトのリクエストベース課金ではHTTPリクエスト処理中のみCPUが割り当てられます。完結型バッチはCloud Runジョブへ分離します。",
+    "flip_point": "Cloud Runジョブのコンテナは$PORTでHTTPサーバーを待ち受ける必要もありません。",
+    "source_ref": "app/#w02-p1",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::cloud-run",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"HTTP 202返却 → リクエスト外はCPU制限・強制終了 → 裏スレッド処理は不安定\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">HTTP 202をすぐ返却</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">リクエスト外はCPU制限</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">裏処理が途中停止 ✕ → ジョブへ</text></svg>"
+  },
+  {
+    "id": "pca-w02-003",
+    "category": "切り分け",
+    "topic": "第2週 Cloud Run サービスとジョブ",
+    "question": "Cloud Run ジョブで10タスク並列実行中、Task 2だけが途中エラー（exit 1）で失敗しました。\n再試行はどう動きますか？",
+    "answer": "成功した他タスクは再実行されず、失敗したTask 2だけがmax-retriesまで自動再試行される。",
+    "reason": "ジョブはタスク単位（CLOUD_RUN_TASK_INDEX）で成否とリトライを管理します。そのため1,000件を分割処理しても失敗チャンクだけやり直せます。",
+    "source_ref": "app/#w02-p1",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::cloud-run",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"10タスク並列実行 → Task 2のみexit 1 → Task 2だけ自動リトライ\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">10タスク並列（Task 2が失敗）</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">タスク単位で成否判定</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">Task 2だけ自動再試行 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-004",
+    "category": "条件反転",
+    "topic": "第2週 Cloud Run サービスとジョブ",
+    "question": "1件2秒で終わる軽量処理を、ファイルアップロードのたびに毎分何百回も即時実行したいです。\nジョブとサービスのどちらが適しますか？",
+    "answer": "Cloud Run サービスへ Pub/Sub Push や Cloud Tasks で HTTP 配信する構成。",
+    "reason": "高頻度・短時間のイベント駆動処理は、毎回ジョブを起動するより常駐HTTPサービスで同時実行・自動スケールさせた方が低遅延です。",
+    "flip_point": "数十分かかる定期バッチや配列タスク一括処理ならCloud Runジョブに戻ります。",
+    "source_ref": "app/#w02-p1",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::cloud-run",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"高頻度・短時間イベント → Pub/Sub Push / Cloud Tasks → Cloud Run サービス\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">高頻度・1件2秒の軽量処理</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Pub/Sub Push・Cloud Tasks</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">Cloud Run サービスで即時処理</text></svg>"
+  },
+  {
+    "id": "pca-w02-005",
+    "category": "設計即断",
+    "topic": "第2週 リビジョンと段階切替",
+    "question": "本番トラフィックを1%も流さず新リビジョンv2をCloud Run上で事前検証し、その後10%カナリア配信する手順は？",
+    "answer": "--no-traffic --tag v2 で0%デプロイし、専用タグURLで検証後に update-traffic で10%へ切り替える。",
+    "reason": "専用タグURL（https://v2---...）なら本番URLをv1=100%に保ったままv2の起動・認証・応答を検証できます。",
+    "flip_point": "非公開サービスではタグURLへアクセスする際も入口のInvoker権限とIDトークンが必要です。",
+    "source_ref": "app/#w02-p2",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::release",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"--no-traffic --tag v2 → タグURL検証 → update-traffic 10%カナリア\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">0%デプロイ（--no-traffic --tag v2）</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">タグURLで事前検証 ✓</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">update-traffic で10%カナリア</text></svg>"
+  },
+  {
+    "id": "pca-w02-006",
+    "category": "設計即断",
+    "topic": "第2週 リビジョンと段階切替",
+    "question": "新リビジョンv2で500エラーが急増しました。\n再ビルドを待たずに数秒で安定版v1へ復旧する方法は？",
+    "answer": "update-traffic で安定版リビジョンv1へトラフィックを100%戻す。",
+    "reason": "Cloud Runのリビジョンは不変スナップショットとして残っているため、ルーティング比率を書き換えるだけで再ビルド不要・数秒で復旧します。",
+    "flip_point": "後方互換性のないDBスキーマ削除を同時に行うと、トラフィック戻しだけでは復旧できません。",
+    "source_ref": "app/#w02-p2",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::release",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"v2で500急増 → update-traffic v1=100% → 再ビルド不要・約3秒で復旧\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">v2で500エラー急増</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">不変v1へトラフィック100%</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">再ビルド不要・数秒で復旧 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-007",
+    "category": "ひっかけ",
+    "topic": "第2週 リビジョンと段階切替",
+    "question": "新リビジョンv2が起動時にクラッシュし、Startup Probeを通過できませんでした。\n稼働中のv1（100%）への本番通信は止まりますか？",
+    "answer": "止まらない。v2がReadyになるまでトラフィックは切り替わらず、v1に100%流れ続ける。",
+    "reason": "Cloud RunはStartup Probeの通過（Ready）をトラフィック切替の前提条件として本番を保護します。",
+    "flip_point": "Ready通過後に業務ロジックで500を返す不具合はプローブだけでは防げないためカナリア観測が必要です。",
+    "source_ref": "app/#w02-p2",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::release",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"v2起動失敗（Ready未達） → トラフィック切替をブロック → v1へ100%継続稼働\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">v2がStartup Probe失敗</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">Ready未達のため切替中止</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">本番はv1へ100%継続 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-008",
+    "category": "切り分け",
+    "topic": "第2週 リビジョンと段階切替",
+    "question": "新リビジョンv2のデプロイは成功しReadyも緑ですが、本番URLへアクセスすると古いv1の応答が返ります。\n最初に何を確認しますか？",
+    "answer": "サービスのトラフィック配分（%）でv2にトラフィックが割り当てられているか確認する。",
+    "reason": "「起動・Ready」「入口認証」「トラフィック割当」「業務応答」は別の関門です。--no-trafficや固定指定が残っていると新版へ流れません。",
+    "source_ref": "app/#w02-p2",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::release",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"v2はReady ✓ だがv1が返る → トラフィック比率を確認 → v2が0%のままだった\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">v2はReady ✓ だが応答がv1</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">4関門のうち配分(%)を確認</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">トラフィック割当がv1=100%</text></svg>"
+  },
+  {
+    "id": "pca-w02-009",
+    "category": "設計即断",
+    "topic": "第2週 スケールとコールドスタート",
+    "question": "夜間アクセスゼロの本番APIで、朝9時の初回アクセス時の4秒の起動遅延を無くしつつ、急増時の台数暴走も防ぎたいです。\n何を設定しますか？",
+    "answer": "min-instances=1（ウォーム待機）と max-instances（台数上限）を併用し、イメージ軽量化や起動時CPUブーストも行う。",
+    "reason": "min-instances=1で0台からのコールドスタートを回避し、max-instancesで暴走課金や下流DB過負荷を同期的に頭打ちにできます。",
+    "flip_point": "初回遅延を許容できる開発環境や学習サンドボックスではmin-instances=0にしてアイドル課金を防ぎます。",
+    "source_ref": "app/#w02-p3",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::scaling",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"min-instances=1 と max-instances併用 → 遅延と暴走を両方制御 → 初回即応 ✓ ＋ 課金暴走防止 ✓\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">min=1（待機）＋ max=5（上限）</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">遅延対策と安全弁を併用</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">初回即応 ✓　暴走防止 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-010",
+    "category": "条件反転",
+    "topic": "第2週 スケールとコールドスタート",
+    "question": "Cloud Runの同時実行数（concurrency）は通常80ですが、動画変換やスレッド非安全ライブラリを使う場合はどう変更しますか？",
+    "answer": "concurrencyを1（または少数）へ下げ、1インスタンスあたりの同時負荷を抑える。",
+    "reason": "I/O待ち中心のWeb APIは高concurrencyが効率的ですが、CPUを100%使う処理やスレッド非安全な処理は同時処理で性能劣化・競合が起きます。",
+    "flip_point": "通常の軽量Web APIでconcurrencyを1に下げると、必要台数とコールドスタート回数が激増します。",
+    "source_ref": "app/#w02-p3",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::scaling",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"CPU集約・スレッド非安全 → concurrencyを1〜少数へ → 競合回避して安定処理\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">CPU集約 / スレッド非安全</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">concurrencyを下げて分離</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">1台あたりの競合を回避 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-011",
+    "category": "ひっかけ",
+    "topic": "第2週 スケールとコールドスタート",
+    "question": "Cloud Runの max-instances や環境変数を変更してデプロイすると、既存リビジョンが上書きされますか？",
+    "answer": "上書きされない。リビジョン設定の変更は必ず新しい不変リビジョンを1つ生成する。",
+    "reason": "設定は「①プロジェクトクォータ ②サービス設定（トラフィック/認証） ③リビジョン設定（スケール/環境変数/SA）」の3階層に分かれます。",
+    "flip_point": "トラフィック比率や入口IAMなど「サービス設定」の変更では新リビジョンは作られません。",
+    "source_ref": "app/#w02-p3",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::scaling",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"max-instances / 環境変数を変更 → リビジョン設定層のため → 新しい不変リビジョンを生成\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">max-instances / 環境変数を変更</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">第3層：リビジョン設定</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">旧版は不変・新版を1つ生成</text></svg>"
+  },
+  {
+    "id": "pca-w02-012",
+    "category": "切り分け",
+    "topic": "第2週 スケールとコールドスタート",
+    "question": "アクセス急増時にCloud Runが429 Too Many Requestsを返し始めました。\nどの3つの設定を突き合わせますか？",
+    "answer": "同時リクエスト数に対する「max-instances × concurrency」の上限と、上位のプロジェクト・リージョンクォータ。",
+    "reason": "必要台数（ceil(同時リクエスト÷concurrency)）がmax-instancesやプロジェクトのvCPUクォータを超えると、超過分は待機後に429で拒否されます。",
+    "source_ref": "app/#w02-p3",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::scaling",
+      "type::triage"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"アクセス急増で429発生 → max × concurrency とクォータ確認 → 同時処理枠の飽和を特定\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">急増時に429エラー発生</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">max×concurrency とクォータ確認</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">同期上限での飽和を特定</text></svg>"
+  },
+  {
+    "id": "pca-w02-013",
+    "category": "設計即断",
+    "topic": "第2週 Artifact Registry",
+    "question": "本番Cloud Runへデプロイ・切り戻しする際、昨日とまったく同じバイナリを100%再現するにはイメージをどう指定しますか？",
+    "answer": ":latest などの可変タグではなく、不変のイメージダイジェスト（@sha256:...）で指定する。",
+    "reason": "タグは後から別イメージへ貼り替え可能ですが、ダイジェストは中身全体から計算される固有指紋であり改ざんや意図しない差し替えを防げます。",
+    "source_ref": "app/#w02-p4",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::artifact-registry",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"タグ（:latest）は付箋・可変 → 本番は固有指紋で固定 → ダイジェスト（@sha256:...）不変\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">タグ（:latest）＝貼替可能な付箋</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">再現性のため固有指紋で固定</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">ダイジェスト（@sha256:...）</text></svg>"
+  },
+  {
+    "id": "pca-w02-014",
+    "category": "ひっかけ",
+    "topic": "第2週 Artifact Registry",
+    "question": "別プロジェクト（共有ビルドPJ）のArtifact Registryから本番Cloud Runへイメージをpullします。\nどのプリンシパルに roles/artifactregistry.reader を付けますか？",
+    "answer": "実行時SAではなく、本番プロジェクトの「Cloud Run サービスエージェント」。",
+    "reason": "イメージのpullはコンテナ起動前に service-PROJECT_NUMBER@serverless-robot-prod.iam.gserviceaccount.com が行います。実行時SAは起動後のGCS等アクセス用です。",
+    "flip_point": "ソースからビルドしてARへpushする権限（writer）はCloud Buildビルド用SAに付けます。",
+    "source_ref": "app/#w02-p4",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::artifact-registry",
+      "type::trap"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"共有PJのArtifact Registry → readerをサービスエージェントへ → 本番Cloud Runへpull成功\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">別PJのArtifact Registry</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">サービスエージェントへreader</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">本番Cloud Runがpull成功 ✓</text></svg>"
+  },
+  {
+    "id": "pca-w02-015",
+    "category": "設計即断",
+    "topic": "第2週 Artifact Registry",
+    "question": "東京リージョン（asia-northeast1）のCloud Runで使うArtifact Registryリポジトリの配置と保管コスト対策は？",
+    "answer": "同じ東京リージョンにリポジトリを作成し、クリーンアップポリシーで古い不要イメージを自動削除する。",
+    "reason": "同リージョン配置によりイメージpullが高速化しクロスリージョン転送課金も防げます。クリーンアップポリシーでストレージ費の肥大も抑えます。",
+    "source_ref": "app/#w02-p4",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::artifact-registry",
+      "type::decision"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"AR（東京リージョン） → 同リージョンpull・自動掃除 → 高速起動 ＋ 転送・保管費最適化\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">ARをCloud Runと同リージョン配置</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">＋ クリーンアップポリシー設定</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">高速pull ＆ 保管・転送費を最適化</text></svg>"
+  },
+  {
+    "id": "pca-w02-016",
+    "category": "条件反転",
+    "topic": "第2週 Artifact Registry",
+    "question": "Artifact Analysisで脆弱性検知はできましたが、「スキャンと署名を通過したイメージ以外は本番へデプロイ自体を禁止する」要件が追加されました。\n何を組み合わせますか？",
+    "answer": "Binary Authorization を組み合わせて、署名済みイメージ以外のデプロイを強制ブロックする。",
+    "reason": "Artifact Analysisは脆弱性の検知・可視化までを担い、デプロイ時の強制ゲート（ポリシー適用）はBinary Authorizationの役割です。",
+    "flip_point": "まず脆弱性を可視化・アラートする段階ならArtifact Registry＋Artifact Analysisで始めます。",
+    "source_ref": "app/#w02-p4",
+    "tags": [
+      "gcp::pca",
+      "week::w02",
+      "domain::artifact-registry",
+      "type::flip"
+    ],
+    "diagram_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 130\" width=\"360\" height=\"130\" role=\"img\" aria-label=\"Artifact Analysis（検知） → 強制ブロック要件が追加 → Binary Authorization（署名検証）\"><rect class=\"pca-node\" x=\"4\" y=\"4\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"29\">Artifact Analysis（脆弱性検知）</text><path class=\"pca-flow\" d=\"M22 46v35m-4-5 4 5 4-5\"/><text class=\"pca-edge\" x=\"194\" y=\"69\">デプロイ強制禁止の要件追加</text><rect class=\"pca-node\" x=\"4\" y=\"88\" width=\"352\" height=\"38\" rx=\"9\"/><text class=\"pca-label\" x=\"180\" y=\"113\">Binary Authorization で強制ゲート</text></svg>"
+  }
+]
