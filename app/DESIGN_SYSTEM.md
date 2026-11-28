@@ -1,5 +1,7 @@
 # GCP Architecture Explorer — Design & Engineering Standard
 
+> 別案の [Study Light 設計ガイドと部品一覧](study-light/README.md) は、Week 1・2 の教材を使った独立した見本です。従来のサイトとその制作基準は引き続き利用できます。
+
 今後の週次セクション（Week 2〜24 / PAA）を毎回ゼロから議論せず、一貫した **Google Cloud / Material Design 品質のライトUI** と **基礎から腹落ちする学習設計** で制作するための恒久基準です。
 
 ---

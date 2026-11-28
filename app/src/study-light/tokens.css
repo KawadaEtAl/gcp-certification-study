@@ -1,0 +1,33 @@
+.study-light {
+  --surface: #fff;
+  --figure-bg: #edf6f0;
+  --figure-line: #dae3dd;
+  --radius-figure: 20px;
+  --font-body:
+    -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  --font-code: ui-monospace, monospace;
+  --body-size: 16px;
+  --text-measure: 47em;
+  --content-max: 1030px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --ink: #1b211e;
+  --muted: #5d645f;
+  --line: #e3e6e3;
+  --nav: #f6f7f6;
+  --soft: #ebeeeb;
+  --accent: #87e3ab;
+  --green: #136843;
+  --bad: #993d2e;
+  --pad: clamp(32px, 5.3vw, 92px);
+}
+@media (max-width: 720px) {
+  .study-light {
+    --radius-figure: 16px;
+    --pad: clamp(16px, 5vw, 26px);
+  }
+}
