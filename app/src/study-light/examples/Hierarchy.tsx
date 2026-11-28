@@ -10,10 +10,12 @@ import {
   Pin,
   CornerDownRight,
   Minus,
+  ShieldBan,
   type LucideIcon,
 } from 'lucide-react';
 import { ChoiceGroup, Insight } from '../ui/Diagrams';
 import { TermLink, Analogy } from '../ui/Help';
+import { CodeBlock, Disclosure } from '../ui/Lesson';
 import { ResourceTree, type TreeItem } from '../ui/Relations';
 
 const kind = {
@@ -67,11 +69,14 @@ const purpose: Record<string, string> = {
 };
 
 export function Hierarchy() {
-  const [scope, set] = useState(1),
-    target = scopeIds[scope];
-  const summary = ['マニュアル用のキーだけ読める', '本番のキーを両方読める', '本番と開発の全キーを読める'][
-    scope
-  ];
+  const [scope, set] = useState(1);
+  const [denyDbPass, setDenyDbPass] = useState(false);
+  const target = scopeIds[scope];
+  const summary =
+    denyDbPass && scope >= 1
+      ? '上位 Allow が継承されても、IAM Deny が db-master-pass を優先遮断'
+      : ['マニュアル用のキーだけ読める（最小スコープ）', '本番のキーを両方読める（継承の罠）', '本番と開発の全キーを読める（過剰権限）'][scope];
+
   return (
     <>
       <section className="figure policy-example" aria-label="シークレットの値の読み取り">
@@ -94,17 +99,35 @@ export function Hierarchy() {
               value={scope}
               onChange={set}
             />
+            <button
+              type="button"
+              className="deny-toggle"
+              aria-pressed={denyDbPass}
+              onClick={() => setDenyDbPass((prev) => !prev)}
+            >
+              <ShieldBan size={15} />
+              IAM Deny（db-master-pass）
+            </button>
           </div>
         </div>
         <div className="tree-caption">
           <span>線はリソースの親子関係</span>
-          <span aria-live="polite">{target} に付与</span>
+          <span aria-live="polite">
+            {target} に付与{denyDbPass ? ' ＋ Deny 有効' : ''}
+          </span>
         </div>
         <ResourceTree
           label="組織から個々のリソースまで"
           items={resources}
           annotation={({ id, kind }, parents) => {
             const isSecret = kind === 'secret';
+            if (denyDbPass && id === 'db-master-pass')
+              return (
+                <b data-access="denied">
+                  <ShieldBan size={15} />
+                  Deny で遮断
+                </b>
+              );
             if (id === target)
               return (
                 <b data-access="direct">
@@ -135,16 +158,35 @@ export function Hierarchy() {
         </p>
       </section>
       <Insight title={summary}>
-        <TermLink id="secret-manager">Secret Manager</TermLink> で rag-api-key
-        の値だけが必要なら、このシークレットに直接付与します。上位で付与すると、配下の他のシークレットにも許可が
-        <TermLink id="allow-inheritance">継承</TermLink>されます。
+        <TermLink id="secret-manager">Secret Manager</TermLink> で <code>rag-api-key</code>
+        の値だけが必要なら、このシークレットに直接付与するのが第一選択です。上位で付与すると配下の他シークレットにも許可が
+        <TermLink id="allow-inheritance">足し算で継承</TermLink>され、子リソース側を空にしても打ち消せません。例外的に上位 Allow を残しつつ特定操作を止めたいときだけ{' '}
+        <TermLink id="iam-deny">IAM Deny</TermLink> を使います。
       </Insight>
+      <Disclosure title="有効なポリシー評価結果を JSON で見る">
+        <CodeBlock
+          text={JSON.stringify(
+            {
+              principal: 'serviceAccount:sa-reader@manual-prod.iam.gserviceaccount.com',
+              allowAttachedAt: target,
+              role: 'roles/secretmanager.secretAccessor',
+              denyGuardrailOnDbMasterPass: denyDbPass,
+              effectiveAccess: {
+                'rag-api-key': 'ALLOW',
+                'db-master-pass': denyDbPass ? 'DENY (overrides inherited Allow)' : scope >= 1 ? 'ALLOW (inherited)' : 'NONE',
+                'test-key': scope >= 2 ? 'ALLOW (inherited)' : 'NONE',
+              },
+            },
+            null,
+            2,
+          )}
+        />
+      </Disclosure>
       <Analogy>
-        本番と開発を別々の資料室、シークレットを鍵付きの棚と考えます。棚の鍵を渡すか、部屋の全ての棚を開ける鍵を渡すかで、同じ担当者が見られる資料の範囲が変わります。
+        本番と開発を別々の資料室、シークレットを鍵付きの棚と考えます。棚の鍵 1 本を渡すか、部屋の全棚を開ける鍵を渡すかで、同じ担当者が見られる範囲が変わります。IAM Deny は全棚パスを持っていても特定の金庫だけ開けさせない非常ロックです。
       </Analogy>
       <p className="sub">
-        フォルダを使う組織の例です。判定はシークレットの値の読み取りに限ります。条件・他の許可・拒否ポリシーはありません。Cloud
-        Run の呼び出しやバケットの読み取りには別の権限が必要です。
+        フォルダを使う組織の例です。判定はシークレットの値の読み取りに限ります。Cloud Run の呼び出しやバケットの読み取りには別の権限が必要です。
       </p>
     </>
   );

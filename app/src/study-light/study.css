@@ -1,6 +1,7 @@
 @import './strip.css';
 @import './tokens.css';
 @import './relations.css';
+@import './extras.css';
 :where(.study-light) * {
   box-sizing: border-box;
 }

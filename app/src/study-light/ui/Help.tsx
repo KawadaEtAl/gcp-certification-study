@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, useId, type ReactNode } from 'react';
 import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Search, X } from 'lucide-react';
-import type { GlossaryTerm, LessonId } from '../../types';
+import type { LessonId } from '../../types';
 import { GLOSSARY_TERMS, getGlossaryTermsForLesson } from '../../data/glossary';
 import { RichText } from '../../components/RichText';
 
@@ -16,13 +16,29 @@ export function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   const heading = useId();
   useEffect(() => {
-    ref.current?.showModal();
+    const dialog = ref.current;
+    if (!dialog) return;
+    dialog.showModal();
+    // Fallback light-dismiss for browsers without <dialog closedby="any"> support (e.g., Safari).
+    if ('closedBy' in HTMLDialogElement.prototype) return;
+    const handleBackdropClick = (event: MouseEvent) => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      const isDialogContent =
+        rect.top <= event.clientY &&
+        event.clientY <= rect.top + rect.height &&
+        rect.left <= event.clientX &&
+        event.clientX <= rect.left + rect.width;
+      if (!isDialogContent) dialog.close();
+    };
+    dialog.addEventListener('click', handleBackdropClick);
+    return () => dialog.removeEventListener('click', handleBackdropClick);
   }, []);
   return (
-    <dialog ref={ref} aria-labelledby={heading} {...{ closedby: 'any' }} onClose={onClose}>
+    <dialog ref={ref} aria-labelledby={heading} {...({ closedby: 'any' } as Record<string, string>)} onClose={onClose}>
       <div className="dialog-bar">
         <h2 id={heading}>{title}</h2>
-        <button className="bare" autoFocus onClick={() => ref.current?.close()} aria-label="閉じる">
+        <button type="button" className="bare" autoFocus onClick={() => ref.current?.close()} aria-label="閉じる">
           <X />
         </button>
       </div>
@@ -43,27 +59,9 @@ export function Analogy({ children, title = 'たとえると' }: { children: Rea
   );
 }
 
-// Keep the source glossary authoritative. This example needs one additional role.
-const viewer: GlossaryTerm = {
-  id: 'object-viewer',
-  term: 'Storage Object Viewer',
-  subtitle: 'roles/storage.objectViewer',
-  category: 'w01-p1',
-  lessons: ['w01-p1'],
-  aliases: ['Object Viewer', '読み取り'],
-  summary:
-    'バケットのオブジェクトを一覧表示し、読み取れるロールです。このロールには作成や削除の権限は含まれません。',
-  analogy:
-    '資料室で目録を見て本を読むための閲覧証です。本を入れ替えたり、持ち出して処分したりする権利は含みません。',
-  examPoint:
-    'この例では、実行用のアカウント sa-reader に manual-docs バケットで付与します。他のロールで書き込みが許可されていないかも確認します。',
-  relatedIds: ['cloud-storage', 'runtime-sa', 'least-privilege'],
-};
-const terms = new Map([viewer, ...GLOSSARY_TERMS].map((t) => [t.id, t]));
+const terms = new Map(GLOSSARY_TERMS.map((t) => [t.id, t]));
 function lessonTerms(id: LessonId) {
-  const entries = getGlossaryTermsForLesson(id);
-  if (id === 'w01-p1' && !entries.some((t) => t.id === viewer.id)) entries.push(terms.get(viewer.id)!);
-  return entries;
+  return getGlossaryTermsForLesson(id);
 }
 const Context = createContext<((id?: string) => void) | undefined>(undefined);
 export function HelpProvider({ lessonId, children }: { lessonId: LessonId; children: ReactNode }) {
@@ -105,7 +103,7 @@ export function LessonTerms({ lessonId, expanded = false }: { lessonId: LessonId
       ))}
     </div>
   ) : (
-    <button className="link" onClick={() => show?.()} aria-haspopup="dialog" aria-label="この単元の用語">
+    <button type="button" className="link" onClick={() => show?.()} aria-haspopup="dialog" aria-label="この単元の用語">
       <BookOpen size={16} />
       <span>この単元の</span>用語
     </button>
@@ -114,7 +112,7 @@ export function LessonTerms({ lessonId, expanded = false }: { lessonId: LessonId
 export function GlossaryButton({ children }: { children: ReactNode }) {
   const open = useContext(Context);
   return (
-    <button onClick={() => open?.()} aria-haspopup="dialog">
+    <button type="button" onClick={() => open?.()} aria-haspopup="dialog">
       {children}
     </button>
   );
@@ -124,26 +122,46 @@ const phrases: Record<string, string> = {
   サービスアカウント: 'service-account',
   実行時サービスアカウント: 'runtime-sa',
   実行時ID: 'runtime-sa',
+  実行時SA: 'runtime-sa',
+  '実行時 SA': 'runtime-sa',
   Invoker: 'run-invoker',
   actAs: 'act-as',
   'Object Viewer': 'object-viewer',
   'Cloud Storage': 'cloud-storage',
   'ID トークン': 'id-vs-oauth-token',
+  IDトークン: 'id-vs-oauth-token',
   アクセストークン: 'id-vs-oauth-token',
   ADC: 'adc',
   WIF: 'wif',
+  'Workload Identity Federation': 'wif',
   メタデータサーバー: 'metadata-server',
   'Secret Manager': 'secret-manager',
+  'IAM Deny': 'iam-deny',
   クォータ: 'quotas',
+  予算アラート: 'billing-budget',
   予算通知: 'billing-budget',
   'Pub/Sub': 'pubsub',
+  リビジョンタグ: 'revision-tag',
   リビジョン: 'revision',
   同時実行数: 'concurrency',
+  Concurrency: 'concurrency',
   コールドスタート: 'cold-start',
+  'Startup Probe': 'startup-probe',
+  起動時CPUブースト: 'cpu-allocation',
+  '起動時 CPU ブースト': 'cpu-allocation',
+  'Startup CPU Boost': 'cpu-allocation',
+  'スケール・トゥ・ゼロ': 'scale-to-zero',
   カナリア: 'traffic-split',
   ロールバック: 'rollback',
+  'Expand and Contract': 'expand-and-contract',
+  'Cloud Scheduler': 'cloud-scheduler',
+  'Cloud Build': 'cloud-build',
+  サービスエージェント: 'cloud-run-service-agent',
+  クリーンアップポリシー: 'cleanup-policy',
+  'Artifact Analysis': 'cleanup-policy',
   'Artifact Registry': 'artifact-registry',
   ダイジェスト: 'tag-vs-digest',
+  コンテナイメージ: 'container',
   コンテナ: 'container',
   'Cloud Run ジョブ': 'cloud-run-service-vs-job',
   'Cloud Run': 'cloud-run',
@@ -206,7 +224,7 @@ function Dictionary({ lessonId, initial }: { lessonId: LessonId; initial: string
     <div ref={top} tabIndex={-1} className="dictionary">
       {t ? (
         <>
-          <button className="link" onClick={() => setPath(path.slice(0, -1))}>
+          <button type="button" className="link" onClick={() => setPath(path.slice(0, -1))}>
             <ArrowLeft size={15} />
             {path.length > 1 ? '前の用語へ' : '用語一覧へ'}
           </button>
@@ -222,20 +240,21 @@ function Dictionary({ lessonId, initial }: { lessonId: LessonId; initial: string
           <p>
             <RichText text={t.examPoint} />
           </p>
-          {t.id === 'rollback' && (
-            <p>切替時間は保証されません。処理中のリクエストやデータの変更は別に確認します。</p>
+          {!!t.relatedIds?.length && (
+            <>
+              <h4>関連する用語</h4>
+              <div className="term-list">
+                {t.relatedIds.map(
+                  (id) =>
+                    terms.has(id) && (
+                      <button type="button" className="term" key={id} onClick={() => setPath([...path, id])}>
+                        {terms.get(id)?.term}
+                      </button>
+                    ),
+                )}
+              </div>
+            </>
           )}
-          <h4>関連する用語</h4>
-          <div className="term-list">
-            {t.relatedIds?.map(
-              (id) =>
-                terms.has(id) && (
-                  <button className="term" key={id} onClick={() => setPath([...path, id])}>
-                    {terms.get(id)?.term}
-                  </button>
-                ),
-            )}
-          </div>
         </>
       ) : (
         <>
@@ -252,6 +271,7 @@ function Dictionary({ lessonId, initial }: { lessonId: LessonId; initial: string
           <div className="options">
             {['この単元', 'すべて'].map((label, i) => (
               <button
+                type="button"
                 key={label}
                 aria-pressed={!normalized && all === !!i}
                 onClick={() => {
@@ -267,7 +287,7 @@ function Dictionary({ lessonId, initial }: { lessonId: LessonId; initial: string
             {items.length ? items.length + '語' : '一致する用語がありません。'}
           </p>
           {items.map((x) => (
-            <button className="dictionary-row" key={x.id} onClick={() => setPath([x.id])}>
+            <button type="button" className="dictionary-row" key={x.id} onClick={() => setPath([x.id])}>
               {x.term}
               <ChevronRight size={17} />
             </button>

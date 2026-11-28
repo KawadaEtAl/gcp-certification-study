@@ -1,5 +1,6 @@
 import { type ComponentType, useState, useEffect } from 'react';
 import {
+  Compass,
   Map as MapIcon,
   BookMarked,
   BookOpen,
@@ -16,10 +17,10 @@ import {
   NotebookPen,
   ArrowRight,
 } from 'lucide-react';
-import type { LessonData } from '../../types';
+import type { LessonData, LessonId } from '../../types';
 import { HelpProvider, LessonTerms, GlossaryButton, Modal, GuidedText } from './Help';
-import { Explanation, Lab, Quiz, useStored } from './Lesson';
-import { Art } from './Art';
+import { Explanation, Lab, Quiz, Story, useStored } from './Lesson';
+import { Art, type ArtName } from './Art';
 import { Library } from '../library/Library';
 
 export interface Unit {
@@ -36,6 +37,7 @@ const tabs = [
   ['解説', BookOpen],
   ['ラボ', NotebookPen],
 ] as const;
+
 function Brand({ url }: { url: string }) {
   return (
     <a className="brand" href={url}>
@@ -57,26 +59,54 @@ function Brand({ url }: { url: string }) {
   );
 }
 const link = (u: Unit, t = 0) => '#' + u.lesson.id + '/' + t;
-function parseRoute(hash: string, units: Unit[]) {
-  const [key, tab] = hash.slice(1).split('/');
+function parseRoute(hash: string, units: Unit[], defaultUnitId?: LessonId) {
+  const clean = hash.replace(/^#/, '');
+  const [key = '', tab] = clean.split('/');
   const old = key.match(/^part([1-4])$/);
   const id = old ? 'w01-p' + old[1] : key;
   const home = key.startsWith('week');
-  const unit =
-    units.find((u) => (home ? u.lesson.week === Number(key.slice(4)) : u.lesson.id === id)) ?? units[0];
+  const fallback = units.find((u) => u.lesson.id === defaultUnitId) ?? units[0];
+  const unit = key
+    ? (units.find((u) => (home ? u.lesson.week === Number(key.slice(4)) : u.lesson.id === id)) ?? fallback)
+    : fallback;
   return { unit, home, t: tabs[Number(tab)] ? Number(tab) : 0 };
 }
+
+function readLegacySolved(): Record<string, boolean> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('gcp-pca-explorer-state-v1') ?? '{}');
+    return parsed?.solved ?? {};
+  } catch {
+    return {};
+  }
+}
+
+const WEEK_ART: Record<number, [ArtName, ArtName, ArtName]> = {
+  0: ['vpc', 'server', 'agent'],
+  1: ['laptop', 'server', 'bucket'],
+  2: ['image', 'identity', 'job'],
+};
+
 type Marks = Record<string, boolean>;
-export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: Record<number, string> }) {
+export function StudyShell({
+  units,
+  weekTitles,
+  defaultUnitId,
+}: {
+  units: Unit[];
+  weekTitles: Record<number, string>;
+  defaultUnitId?: LessonId;
+}) {
   const [hash, setHash] = useState(location.hash);
-  const [back, setBack] = useState(link(units[0]));
+  const fallbackUnit = units.find((u) => u.lesson.id === defaultUnitId) ?? units[0];
+  const [back, setBack] = useState(link(fallbackUnit));
   const library = /^#(art|figures)(\/|$)/.test(hash);
   useEffect(() => {
-    if (!library) setBack(hash || link(units[0]));
-  }, [library, hash, units]);
+    if (!library) setBack(hash || link(fallbackUnit));
+  }, [library, hash, fallbackUnit]);
   const [collapsed, collapse] = useState(false);
   const [modal, setModal] = useState<'saved' | 'nav' | null>(null);
-  const [done, mark, doneError] = useStored<Marks>('done', {}),
+  const [done, mark, doneError] = useStored<Marks>('done', {}, readLegacySolved),
     [saved, star, starError] = useStored<Marks>('stars', {});
   useEffect(() => {
     function navigate() {
@@ -87,12 +117,13 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
     window.addEventListener('hashchange', navigate);
     return () => window.removeEventListener('hashchange', navigate);
   }, []);
-  const { unit, home, t } = parseRoute(hash, units);
+  const { unit, home, t } = parseRoute(hash, units, defaultUnitId);
   const { lesson, Diagram } = unit,
     { week, id } = lesson;
   const thisWeek = units.filter((u) => u.lesson.week === week);
   const weeks = [...new Set(units.map((u) => u.lesson.week))];
-  const weeksPage = '#week' + week;
+  const overviewUnit = units.find((u) => u.lesson.week === 0);
+  const weeksPage = week === 0 && overviewUnit ? link(overviewUnit) : '#week' + week;
   const next = units[units.indexOf(unit) + 1];
   const progress = thisWeek.filter((u) => done[u.lesson.id]).length;
   const title = library ? '図解ライブラリ' : home ? weekTitles[week] : unit.title;
@@ -118,10 +149,22 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
   const nav = (
     <>
       <nav className="utilities" aria-label="学習メニュー">
-        <a href={weeksPage} onClick={closeNav} aria-current={home ? 'page' : undefined}>
-          <MapIcon />
-          今週の概要
-        </a>
+        {overviewUnit && (
+          <a
+            href={link(overviewUnit)}
+            onClick={closeNav}
+            aria-current={!home && id === overviewUnit.lesson.id ? 'page' : undefined}
+          >
+            <Compass />
+            全体地図（W0）
+          </a>
+        )}
+        {week !== 0 && (
+          <a href={weeksPage} onClick={closeNav} aria-current={home ? 'page' : undefined}>
+            <MapIcon />
+            今週の概要
+          </a>
+        )}
         <a href="#art" onClick={closeNav}>
           <Shapes />
           図解ライブラリ
@@ -130,13 +173,13 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
           <BookMarked />
           用語集
         </GlossaryButton>
-        <button onClick={() => setModal('saved')}>
+        <button type="button" onClick={() => setModal('saved')}>
           <Bookmark />
           ブックマーク
         </button>
       </nav>
       <nav className="units" aria-label="今週の単元">
-        <h2>Week {week}</h2>
+        <h2>{week === 0 ? 'Week 0・全体像' : 'Week ' + week}</h2>
         {thisWeek.map((u) => (
           <a
             key={u.lesson.id}
@@ -151,7 +194,7 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
       </nav>
       <div className="progress">
         <div>
-          <b>今週の進捗</b>
+          <b>{week === 0 ? '全体像の進捗' : '今週の進捗'}</b>
           <span>
             {progress} / {thisWeek.length}
           </span>
@@ -160,6 +203,7 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
       </div>
     </>
   );
+  const weekArts = WEEK_ART[week] ?? ['laptop', 'server', 'bucket'];
   return (
     <div className="study-light">
       <HelpProvider key={home ? weeksPage : id} lessonId={id}>
@@ -171,13 +215,14 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
           <main>
             <header className="top">
               <button
+                type="button"
                 className="bare desktop"
                 aria-label={collapsed ? '目次を開く' : '目次を閉じる'}
                 onClick={() => collapse(!collapsed)}
               >
                 <PanelLeft size={20} />
               </button>
-              <button className="bare mobile" aria-label="目次を開く" onClick={() => setModal('nav')}>
+              <button type="button" className="bare mobile" aria-label="目次を開く" onClick={() => setModal('nav')}>
                 <Menu size={22} />
               </button>
               <label className="week-select">
@@ -190,16 +235,17 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
                 >
                   {weeks.map((w) => (
                     <option key={w} value={w}>
-                      Week {w}
+                      {w === 0 ? 'Week 0' : 'Week ' + w}
                     </option>
                   ))}
                 </select>
                 <ChevronDown size={14} />
               </label>
-              <b>{home ? '概要' : 'Part ' + lesson.part}</b>
+              <b>{week === 0 ? '全体像' : home ? '概要' : 'Part ' + lesson.part}</b>
               {!home && (
                 <div className="actions">
                   <button
+                    type="button"
                     className="bare"
                     aria-label={saved[id] ? 'ブックマークを解除' : 'ブックマークに追加'}
                     aria-pressed={!!saved[id]}
@@ -208,6 +254,7 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
                     <Bookmark size={19} fill={saved[id] ? 'currentColor' : 'none'} />
                   </button>
                   <button
+                    type="button"
                     className="status"
                     aria-pressed={!!done[id]}
                     onClick={() => mark({ ...done, [id]: !done[id] })}
@@ -224,9 +271,9 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
               {home ? (
                 <>
                   <div className="sheet overview">
-                    <Art name="laptop" />
-                    <Art name="server" />
-                    <Art name={week === 1 ? 'bucket' : 'image'} />
+                    <Art name={weekArts[0]} />
+                    <Art name={weekArts[1]} />
+                    <Art name={weekArts[2]} />
                   </div>
                   <h2>今週の単元</h2>
                   {links(thisWeek)}
@@ -250,9 +297,12 @@ export function StudyShell({ units, weekTitles }: { units: Unit[]; weekTitles: R
                   {t !== 0 && unit.scope && <p className="sub">{unit.scope}</p>}
                   <div hidden={t !== 0}>
                     <Diagram hidden={t !== 0} />
+                    <div className="diagram-story">
+                      <Story story={lesson.story} />
+                    </div>
                   </div>
                   <div hidden={t !== 1}>
-                    <Quiz quiz={lesson.examQuiz} />
+                    <Quiz lessonId={id} quiz={lesson.examQuiz} />
                   </div>
                   {t === 2 && <Explanation lesson={lesson} />}
                   {t === 3 && <Lab lesson={lesson} />}
