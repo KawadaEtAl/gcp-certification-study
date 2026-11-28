@@ -3,7 +3,8 @@ import type { LessonData } from '../../types';
 import { WEEK01_LESSONS } from '../../data/week01';
 import { WEEK02_LESSONS } from '../../data/week02';
 import { Permissions } from './Permissions';
-import { PairedLesson, Hierarchy, OverviewMap, Traffic, Capacity } from './Patterns';
+import { Hierarchy } from './Hierarchy';
+import { PairedLesson, OverviewMap, Traffic, Capacity } from './Patterns';
 import type { Unit } from '../ui/Shell';
 
 function unit(
@@ -32,13 +33,13 @@ export const units = [
     'w01-p2',
     '鍵を使わない認証',
     '秘密鍵を置かずに認証する',
-    'ポータルとアプリは、それぞれ相手に何を送るのでしょうか。',
+    '秘密鍵を配らずに、何を根拠に誰のトークンを取得できるのでしょうか。',
   ),
   unit(
     'w01-p3',
     'IAM の継承',
     'IAM の許可はどこまで届く？',
-    'アプリに2つのシークレットのうち1つだけを読ませるには、どこで許可しますか。',
+    '本番のマニュアル用キー（rag-api-key）だけをアプリに読ませるには、どこで許可しますか。',
     Hierarchy,
   ),
   unit(

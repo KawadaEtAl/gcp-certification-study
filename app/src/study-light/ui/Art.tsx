@@ -221,7 +221,7 @@ function Crate() {
     </g>
   );
 }
-export type ArtName = 'laptop' | 'portal' | 'server' | 'identity' | 'bucket' | 'image' | 'job';
+export type ArtName = 'laptop' | 'portal' | 'server' | 'identity' | 'bucket' | 'image' | 'job' | 'badge';
 const objects: Record<ArtName, React.ReactNode> = {
   laptop: <Laptop />,
   portal: <Laptop portal />,
@@ -229,6 +229,20 @@ const objects: Record<ArtName, React.ReactNode> = {
   server: <Server />,
   identity: <Server identity />,
   image: <Crate />,
+  badge: (
+    <g transform="translate(57 34) skewY(20)">
+      <rect x="-4" y="94" width="143" height="16" rx="7" fill="#d5e6db" stroke="none" />
+      <rect x="8" y="-8" width="126" height="88" rx="8" fill={green} />
+      <rect width="126" height="88" rx="8" fill="white" />
+      <path d="M8 0H118Q126 0 126 8V19H0V8Q0 0 8 0Z" fill={mint} />
+      <rect x="52" y="-14" width="22" height="23" rx="4" fill={ink} />
+      <path d="M57 1H69" stroke={mint} />
+      <rect x="11" y="31" width="38" height="43" rx="3" fill={side} />
+      <circle cx="30" cy="45" r="7" fill={ink} />
+      <path d="M18 67q0-23 24 0Z" fill={ink} />
+      <path d="M62 38h45m-45 11h35m-35 11h44m-44 8h20" strokeWidth={3} />
+    </g>
+  ),
   job: (
     <>
       <Server />

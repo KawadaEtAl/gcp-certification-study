@@ -4,10 +4,15 @@ import { Art } from '../ui/Art';
 import { Comparison, ChoiceGroup, ScenarioSelect, Insight, Status, type Verdict } from '../ui/Diagrams';
 import { GuidedText, Modal, TermLink, Analogy } from '../ui/Help';
 import { usePlayback, Playback } from '../ui/Playback';
+import { FlowNode, FlowEdge } from '../ui/Relations';
 import { Inspector } from '../ui/Lesson';
 const steps = [
   {
     name: 'デプロイ',
+    route: '開発者が sa-reader を指定',
+    cargo: '実行 ID を指定',
+    trace:
+      '開発者は自分の ID で Cloud Run 管理 API を呼びます。sa-reader を実行 ID に指定するには、このアカウントに対する actAs 権限が必要です。',
     id: 'act-as',
     art: 'laptop',
     who: '開発者',
@@ -30,9 +35,13 @@ const steps = [
   },
   {
     name: '呼び出し',
+    route: '社内ポータルから Cloud Run へ',
+    cargo: 'ID トークン',
+    trace:
+      'ポータルは manual-rag 宛ての ID トークンを送ります。入口では sa-internal-app に呼び出しを許可したかを判定します。',
     id: 'run-invoker',
     art: 'server',
-    who: 'ポータルの ID',
+    who: 'sa-internal-app',
     target: 'Cloud Run サービス',
     phase: '実行時',
     analogy: '窓口に依頼',
@@ -52,6 +61,10 @@ const steps = [
   },
   {
     name: '読み取り',
+    route: 'Cloud Run から Cloud Storage へ',
+    cargo: 'アクセストークン',
+    trace:
+      'ADC がメタデータサーバーから sa-reader のアクセストークンを取得します。アプリはこれを送って guide.md を読み、結果をポータルに返します。',
     id: 'object-viewer',
     art: 'bucket',
     who: 'sa-reader',
@@ -82,7 +95,7 @@ export function Permissions({ hidden }: { hidden: boolean }) {
     [mode, setMode] = useState(0),
     [details, setDetails] = useState<number | null>(null);
   const end = scenario < 0 ? steps.length * span : (scenario + 0.5) * span;
-  const player = usePlayback(end, span, !mode || hidden);
+  const player = usePlayback(end, span, mode === 1 || hidden);
   const { i, position } = player,
     item = steps[i],
     denied = i === scenario;
@@ -94,8 +107,8 @@ export function Permissions({ hidden }: { hidden: boolean }) {
   const board = (
     <Comparison<Step>
       label="3つの権限チェックの比較"
-      compact={!!mode}
-      active={mode ? item.id : undefined}
+      compact={mode !== 1}
+      active={mode !== 1 ? item.id : undefined}
       items={steps.map((s, j) => ({
         id: s.id,
         art: s.art,
@@ -135,7 +148,15 @@ export function Permissions({ hidden }: { hidden: boolean }) {
   return (
     <>
       <div className="diagram-tools">
-        <ChoiceGroup label="図解の見方" choices={['比較', '順に見る']} value={mode} onChange={setMode} />
+        <ChoiceGroup
+          label="図解の見方"
+          choices={['全体図', '比較', '拡大']}
+          value={mode}
+          onChange={(v) => {
+            player.seek(position);
+            setMode(v);
+          }}
+        />
         <ScenarioSelect
           label="権限の条件"
           choices={['すべて許可', ...steps.map((s) => s.short + ' なし')]}
@@ -147,7 +168,12 @@ export function Permissions({ hidden }: { hidden: boolean }) {
           }}
         />
       </div>
-      {!mode ? (
+      {mode === 0 ? (
+        <>
+          <PermissionMap player={player} verdict={verdict} onDetail={setDetails} />
+          {board}
+        </>
+      ) : mode === 1 ? (
         <>
           {board}
           <Insight title={scenario < 0 ? '①で指定した ID が③で資料を読む' : steps[scenario].failed}>
@@ -247,7 +273,8 @@ export function Permissions({ hidden }: { hidden: boolean }) {
         ①責任者が窓口の担当者を任命します。②社員が窓口で資料を頼むと、③担当者が自分の閲覧証で書庫に入ります。社員の入館証だけでは、担当者は書庫に入れません。
       </Analogy>
       <p className="sub">
-        ①は設定時、②と③は実行時の判定です。①の actAs
+        判定は選んだ条件での結果です。①は設定時、②と③は実行時の判定です。①を毎回繰り返す必要はありません。再生時間は説明用です。①の
+        actAs
         は権限名、②③はロールの例です。新規デプロイを想定し、開発者のデプロイ権限など他の条件は満たしているとします。
       </p>
       {details !== null && (
@@ -256,6 +283,91 @@ export function Permissions({ hidden }: { hidden: boolean }) {
         </Modal>
       )}
     </>
+  );
+}
+
+function PermissionMap({
+  player,
+  verdict,
+  onDetail,
+}: {
+  player: ReturnType<typeof usePlayback>;
+  verdict: (j: number) => Verdict;
+  onDetail: (j: number) => void;
+}) {
+  const { i, position, seek } = player;
+  const stage = steps[i],
+    denied = verdict(i) === 'stop';
+  function edge(j: number, area: string) {
+    const s = steps[j],
+      result = verdict(j);
+    return (
+      <FlowEdge
+        area={area}
+        number={j + 1}
+        label={s.name}
+        route={s.route}
+        result={result}
+        active={j === i}
+        progress={position / span - i}
+        onSelect={() => (result === 'unreached' ? onDetail(j) : seek(j * span))}
+      >
+        <span>{j === 0 ? s.cargo : <TermLink id="id-vs-oauth-token">{s.cargo}</TermLink>}</span>
+        <TermLink id={s.id}>{s.short}</TermLink>
+      </FlowEdge>
+    );
+  }
+  return (
+    <section className="figure" aria-label="実行 ID の設定と資料の読み取り">
+      <div className="permission-map sheet" data-assigned={verdict(0) === 'pass'}>
+        <FlowNode area="developer" art="laptop" label="開発者">
+          個人の ID
+        </FlowNode>
+        {edge(0, 'deploy')}
+        <FlowNode area="account" art="badge" label={<TermLink id="runtime-sa">実行 ID</TermLink>}>
+          sa-reader
+        </FlowNode>
+        <div className="assignment" aria-label="Cloud Run に sa-reader を割り当てる設定">
+          <span>{verdict(0) === 'stop' ? '未設定' : '割り当て'}</span>
+        </div>
+        <FlowNode area="portal" art="portal" label="社内ポータル">
+          sa-internal-app
+        </FlowNode>
+        {edge(1, 'invoke')}
+        <FlowNode area="app" art="identity" label={<TermLink id="cloud-run">Cloud Run</TermLink>}>
+          manual-rag
+          <br />
+          {verdict(0) === 'stop' ? (
+            '未作成'
+          ) : (
+            <>
+              ID　<span className="id-name">sa-reader</span>
+            </>
+          )}
+        </FlowNode>
+        {edge(2, 'read')}
+        <FlowNode area="bucket" art="bucket" label={<TermLink id="cloud-storage">Cloud Storage</TermLink>}>
+          manual-docs
+          <br />
+          guide.md
+        </FlowNode>
+        <section className="focus-note" aria-live="polite">
+          <div>
+            <b>
+              {stage.phase}　{i + 1} / 3
+            </b>
+            <button className="link" onClick={() => onDetail(i)}>
+              権限の詳細 <ArrowUpRight size={15} />
+            </button>
+          </div>
+          <strong>{denied ? stage.failed : stage.title}</strong>
+          <p>
+            <GuidedText text={denied ? stage.why : stage.trace} />
+          </p>
+        </section>
+      </div>
+      <Playback player={player} label={stage.name} />
+    </section>
   );
 }
 

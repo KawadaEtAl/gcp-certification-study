@@ -4,3 +4,4 @@ export * from './Help';
 export * from './Lesson';
 export * from './Playback';
 export * from './Shell';
+export * from './Relations';

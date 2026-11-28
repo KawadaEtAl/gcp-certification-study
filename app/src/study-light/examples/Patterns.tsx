@@ -1,9 +1,10 @@
+import { LESSON_KEY_TERM_IDS } from '../../data/glossary';
 import { useState, type ReactNode } from 'react';
-import { Check, Minus, ArrowDown, KeyRound, Folder, RotateCcw } from 'lucide-react';
+import { ArrowDown, RotateCcw } from 'lucide-react';
 import type { LessonId } from '../../types';
 import { Art, type ArtName } from '../ui/Art';
-import { Comparison, BranchDiagram, ChoiceGroup, RatioBar, RangeControl, Insight } from '../ui/Diagrams';
-import { Analogy, TermLink, LessonTerms, GuidedText } from '../ui/Help';
+import { Comparison, ChoiceGroup, RatioBar, RangeControl, Insight } from '../ui/Diagrams';
+import { Analogy, TermLink, GuidedText } from '../ui/Help';
 import { CodeBlock, Disclosure } from '../ui/Lesson';
 
 type Case = { name: string; term: string; art?: ArtName; fields: [string, string, string] };
@@ -78,11 +79,79 @@ const pairs: Partial<Record<LessonId, Pair>> = {
       '「最新版」という付箋は別の本に貼り替えられます。ダイジェストは内容から計算する識別子なので、付箋を動かしても変わりません。',
   },
 };
+function CredentialPaths() {
+  const paths = [
+    {
+      title: '開発者の PC',
+      art: 'laptop',
+      proof: '開発者のログイン',
+      lookup: (
+        <>
+          ローカルの <TermLink id="adc">ADC</TermLink> の認証情報を使う
+        </>
+      ),
+      principal: '開発者本人',
+    },
+    {
+      title: 'Cloud Run',
+      art: 'identity',
+      proof: 'サービスに実行 ID を割り当て済み',
+      lookup: (
+        <>
+          <TermLink id="adc">ADC</TermLink> が<TermLink id="metadata-server">メタデータサーバー</TermLink>
+          に問い合わせる
+        </>
+      ),
+      principal: 'sa-reader',
+    },
+    {
+      title: '外部 CI',
+      art: 'portal',
+      proof: (
+        <>
+          CI が発行した <TermLink id="oidc-token">OIDC トークン</TermLink>
+        </>
+      ),
+      lookup: (
+        <>
+          <TermLink id="wif">WIF</TermLink> を使い、<TermLink id="sts">STS</TermLink> で検証・交換
+        </>
+      ),
+      principal: 'CI の外部 ID',
+    },
+  ] as const;
+  return (
+    <>
+      <Comparison
+        label="短期の認証情報を得る3つの経路"
+        items={paths.map((path) => ({ id: path.title, title: path.title, art: path.art, data: path }))}
+        axes={[
+          { label: '根拠', value: (path) => path.proof },
+          { label: '取得方法', value: (path) => path.lookup },
+          { label: '使う ID', value: (path) => path.principal },
+        ]}
+      />
+      <Insight title="同じコードでも、権限を使う ID は変わる">
+        開発者の PC で資料を読めても、Cloud Run では sa-reader の権限で判定されます。
+        <TermLink id="short-lived-token">短期トークン</TermLink>
+        を取得できた後も、対象の資料を読む許可が必要です。
+      </Insight>
+      <p className="sub">
+        PC はユーザーのローカル ADC を設定済み、Cloud Run は他の認証情報を指定していない例です。外部 CI は
+        Google Cloud が信頼する条件を設定し、外部 ID に直接許可した例です。
+        <TermLink id="impersonation">サービスアカウントの権限を借りる</TermLink>構成もあります。
+      </p>
+      <h2>宛先によって、送るトークンも変わる</h2>
+    </>
+  );
+}
+
 export function PairedLesson({ id }: { id: LessonId }) {
   const pair = pairs[id];
   if (!pair) return null;
   return (
     <>
+      {id === 'w01-p2' && <CredentialPaths />}
       <Comparison<Case>
         label={pair.takeaway}
         items={pair.cases.map((c) => ({
@@ -97,90 +166,106 @@ export function PairedLesson({ id }: { id: LessonId }) {
     </>
   );
 }
-export function Hierarchy() {
-  const [scope, set] = useState(1);
-  const key = (name: string, access: boolean) => (
-    <>
-      <KeyRound size={17} />
-      <strong>{name}キー</strong>
-      <span>
-        {access ? (
-          <>
-            <Check />
-            読める
-          </>
-        ) : (
-          <>
-            <Minus />
-            読めない
-          </>
-        )}
-      </span>
-    </>
-  );
+function RunBranch({
+  art,
+  title,
+  trigger,
+  split,
+  children,
+  result,
+}: {
+  art: ArtName;
+  title: string;
+  trigger: string;
+  split: ReactNode;
+  children: ReactNode;
+  result: ReactNode;
+}) {
   return (
-    <>
-      <div className="standalone sheet">
-        <ChoiceGroup
-          label="許可を付ける範囲"
-          choices={['プロジェクト全体', 'マニュアル用のみ']}
-          value={scope}
-          onChange={set}
-        />
-        <BranchDiagram
-          parent={
-            <>
-              <Folder size={17} />
-              プロジェクト
-            </>
-          }
-        >
-          {[key('マニュアル用', true), key('決済用', !scope)]}
-        </BranchDiagram>
+    <section className="run-branch">
+      <Art name={art} />
+      <h3>
+        <TermLink id="cloud-run-service-vs-job">{title}</TermLink>
+      </h3>
+      <div>{trigger}</div>
+      <div className="run-split">
+        <ArrowDown size={15} />
+        {split}
       </div>
-      <Insight title={scope ? '指定したキーだけ読める' : '両方のキーを読める'}>
-        上位で与えた許可は下位に<TermLink id="allow-inheritance">継承</TermLink>されます。ここでは Secret
-        Accessor の付与先だけを変え、他の許可や拒否はないと仮定します。
-      </Insight>
-      <Analogy>書庫にある全ての棚の鍵と、マニュアルの棚だけの鍵を比べてみましょう。</Analogy>
-    </>
+      <div className="run-units">{children}</div>
+      <strong>{result}</strong>
+    </section>
   );
 }
-
 export function OverviewMap() {
-  const destination = (name: string, example: ReactNode) => (
-    <>
-      <TermLink id="cloud-run-service-vs-job">{name}</TermLink>
-      <small>{example}</small>
-    </>
-  );
   return (
     <>
-      <div className="sheet standalone">
+      <div className="figure run-map sheet">
         <div className="store-art">
           <Art name="image" />
           <div>
             <strong>
-              <TermLink id="artifact-registry">Artifact Registry</TermLink>
+              コードをビルド → <TermLink id="artifact-registry">Artifact Registry</TermLink>
             </strong>
-            <p>アプリのイメージを保管</p>
+            <p>
+              できた<TermLink id="container">コンテナイメージ</TermLink>を保管
+            </p>
           </div>
         </div>
-        <div className="down">
-          <ArrowDown size={19} />
-          イメージを指定
+        <div className="run-source">
+          <ArrowDown size={17} />
+          <TermLink id="tag-vs-digest">ダイジェスト</TermLink>で指定し、
+          <TermLink id="cloud-run">Cloud Run</TermLink> にデプロイ
         </div>
-        <BranchDiagram parent={<TermLink id="cloud-run" />}>
-          {[destination('サービス', '問い合わせに応答'), destination('ジョブ', '索引を更新して終了')]}
-        </BranchDiagram>
+        <div className="run-fork">
+          <RunBranch
+            art="identity"
+            title="サービス"
+            trigger="ポータルからの問い合わせ"
+            split={<TermLink id="traffic-split">リクエストを配分</TermLink>}
+            result="マニュアルを返す"
+          >
+            <span>
+              <TermLink id="revision">旧版 v1</TermLink>　90%<small>インスタンス 3台</small>
+            </span>
+            <span>
+              <TermLink id="revision">新版 v2</TermLink>　10%<small>インスタンス 1台</small>
+            </span>
+          </RunBranch>
+          <RunBranch
+            art="job"
+            title="ジョブ"
+            trigger="スケジューラが毎晩起動"
+            split="1回の実行で分担"
+            result="全タスク成功で索引更新が完了"
+          >
+            <span>
+              タスク 0<small>前半の資料を処理</small>
+            </span>
+            <span>
+              タスク 1<small>後半の資料を処理</small>
+            </span>
+          </RunBranch>
+        </div>
       </div>
+      <p className="sub">
+        配分・台数・作業分担は一例です。サービスでは各版の負荷や
+        <TermLink id="concurrency">同時実行数</TermLink>
+        などに応じて台数が変わります。ジョブの分担はアプリ側で決めます。
+      </p>
       <Insight title="版と台数を分けて考える">
         <TermLink id="revision">リビジョン</TermLink>
-        はアプリの版、インスタンスはその版を実際に動かす1台です。アクセスが増えても、台数を増やすために新しい版を作る必要はありません。
+        はアプリの版、インスタンスはその版を実際に動かす1台です。旧版へ
+        <TermLink id="rollback">切り戻す</TermLink>
+        ときは配分を変えます。台数だけ増やすなら、新しい版を作る必要はありません。
       </Insight>
       <Analogy>同じ版の本を何冊用意するかと、改訂版を出すかどうかは別の判断です。</Analogy>
-      <h2>今週の用語</h2>
-      <LessonTerms lessonId="w02-p0" expanded />
+      <h2>今週の前提になる用語</h2>
+      <div className="term-list">
+        {LESSON_KEY_TERM_IDS['w02-p0'].map((id) => (
+          <TermLink key={id} id={id} />
+        ))}
+      </div>
     </>
   );
 }
