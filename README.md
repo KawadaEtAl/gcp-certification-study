@@ -7,8 +7,8 @@
 - [進捗](PROGRESS.md) — 前回の実績、詰まった点、次回の作業
 - [演習](labs/README.md) — 架空のRAGアプリと第1週の実習
 - [公式ケーススタディ](case-studies/README.md) — 4件と分析テンプレート
-- `notes/` — 演習結果、判断の理由、復習メモ（[用語集](notes/glossary.md)）
-- `app/` — インタラクティブ学習サイト（制作基準：[app/DESIGN_SYSTEM.md](app/DESIGN_SYSTEM.md)）
+- `app/` — インタラクティブ学習サイト・**第2週以降のメイン教材（正本）**（制作基準：[app/DESIGN_SYSTEM.md](app/DESIGN_SYSTEM.md)）
+- `notes/` — [用語集](notes/glossary.md)、第1週アーカイブノート、必要に応じた補助メモ（第2週以降の週次教材は `app/` に一本化）
 
 学習は週4〜6時間を仮置きする。最初にロードマップの第1週と演習を開く。進捗は日付と裏付けを添えて更新し、未実施は未実施と記録する。
 
